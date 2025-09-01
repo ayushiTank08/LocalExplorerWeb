@@ -1,0 +1,41 @@
+{
+  "name": "nextforge",
+  "private": true,
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.14.0",
+  "description": "Production-grade Turborepo template for Next.js apps",
+  "keywords": [
+    "nextjs",
+    "turborepo",
+    "monorepo",
+    "typescript",
+    "tailwindcss",
+    "radix-ui"
+  ],
+  "author": "NextForge Community",
+  "license": "MIT",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "type-check": "turbo run type-check"
+  },
+  "devDependencies": {
+    "turbo": "2.5.5",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nextforge/nextforge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nextforge/nextforge/issues"
+  },
+  "homepage": "https://github.com/nextforge/nextforge#readme"
+}
