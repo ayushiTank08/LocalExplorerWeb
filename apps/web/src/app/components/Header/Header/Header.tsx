@@ -54,13 +54,17 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Menu</h2>
 
               <div className="space-y-1">
-                <Link href="/" passHref>
+                {/* <Link href="/" passHref>
                   <Button className="flex h-10 min-w-10 p-2 justify-center items-center gap-2 rounded border border-[var(--color-neutral)] relative cursor-pointer">
                     <span className="flex w-5 h-5 justify-center items-center relative">
                       <img src="/assets/Icons/Home.svg" alt="Home" width="20" height="20" className="w-5 h-5" />
                     </span>
                   </Button>
-                </Link>
+                </Link> */}
+                <button className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg">
+                  <img src="/assets/Icons/Home.svg" alt="Home" width="20" height="20" className="w-5 h-5" />
+                  <span className="text-gray-800">Home</span>
+                </button>
                 <button className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg">
                   <img src="/assets/Icons/Ticket.svg" alt="Passes" className="w-5 h-5" />
                   <span className="text-gray-800">Passes</span>

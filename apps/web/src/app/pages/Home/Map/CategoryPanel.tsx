@@ -61,7 +61,7 @@ const CategoryPanel: React.FC = () => {
   };
 
   return (
-    <aside className="fixed right-3 top-80 lg:top-56 lg:right-6 z-30 w-[264px] max-h-[70vh] overflow-auto rounded shadow-lg bg-[var(--color-secondary)] text-white">
+    <aside className="fixed right-3 top-60 lg:top-48 lg:right-6 z-30 w-[264px] max-h-[70vh] overflow-auto rounded shadow-lg bg-[var(--color-secondary)] text-white">
       <div className="flex items-center justify-between px-4 py-3">
         <h3 className="font-semibold text-lg">{topNode.CategoryName}</h3>
         <Button onClick={closePanel} aria-label="Close" className="text-white/90 hover:text-white text-3xl leading-none cursor-pointer">×</Button>
