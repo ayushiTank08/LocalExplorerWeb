@@ -223,7 +223,22 @@ const Map: React.FC = () => {
         .addTo(map);
 
       popupRef.current = newPopup;
-      createRoot(popupContainer).render(<MapPopup place={place} onClose={() => newPopup.remove()} />);
+      const handleClose = () => {
+      if (popupRef.current) {
+        popupRef.current.remove();
+        popupRef.current = null;
+      }
+      if (selectedPlace?.Id === place.Id) {
+        dispatch(clearSelectedPlace());
+      }
+    };
+
+    createRoot(popupContainer).render(
+      <MapPopup 
+        place={place} 
+        onClose={handleClose}
+      />
+    );
     });
 
     map.on("mouseenter", "unclustered-point", () => {
@@ -242,7 +257,10 @@ const Map: React.FC = () => {
     if (!selectedPlace) return;
     const exists = places.some((p: Place) => p.Id === selectedPlace.Id);
     if (!exists) {
-      if (popupRef.current) { popupRef.current.remove(); popupRef.current = null; }
+      if (popupRef.current) { 
+        popupRef.current.remove(); 
+        popupRef.current = null; 
+      }
       dispatch(clearSelectedPlace());
     }
   }, [places, selectedPlace, dispatch]);
@@ -306,7 +324,23 @@ const Map: React.FC = () => {
         .setLngLat([Longitude, Latitude])
         .addTo(map);
       popupRef.current = newPopup;
-      createRoot(popupContainer).render(<MapPopup place={selectedPlace} onClose={() => newPopup.remove()} />);
+      
+      const handleClose = () => {
+        if (popupRef.current) {
+          popupRef.current.remove();
+          popupRef.current = null;
+        }
+        if (selectedPlace) {
+          dispatch(clearSelectedPlace());
+        }
+      };
+      
+      createRoot(popupContainer).render(
+        <MapPopup 
+          place={selectedPlace} 
+          onClose={handleClose}
+        />
+      );
     }
   }, [selectedPlace, mapInitialized]);
 
@@ -330,9 +364,25 @@ const Map: React.FC = () => {
           const newPopup = new mapboxgl.Popup({ offset: 25, closeButton: false })
             .setDOMContent(popupContainer)
             .setLngLat([Longitude, Latitude])
-            .addTo(map);
+            .addTo(map); 
           popupRef.current = newPopup;
-          createRoot(popupContainer).render(<MapPopup place={selectedPlace} onClose={() => newPopup.remove()} />);
+          
+          const handleClose = () => {
+            if (popupRef.current) {
+              popupRef.current.remove();
+              popupRef.current = null;
+            }
+            if (selectedPlace) {
+              dispatch(clearSelectedPlace());
+            }
+          };
+          
+          createRoot(popupContainer).render(
+            <MapPopup 
+              place={selectedPlace} 
+              onClose={handleClose}
+            />
+          );
         } else {
           popupRef.current.setLngLat([Longitude, Latitude]);
         }
@@ -453,6 +503,17 @@ const Map: React.FC = () => {
       if (map.getSource(overlaySourceId)) map.removeSource(overlaySourceId);
     }
   }, [hoveredPlace, mapInitialized]);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      const timer = setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+        }
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [isSidebarOpen]);
 
   return (
     <div className="w-full md:h-[calc(100vh-330px)] h-[calc(100dvh-176px)] rounded-lg overflow-hidden shadow relative md:pb-0">
