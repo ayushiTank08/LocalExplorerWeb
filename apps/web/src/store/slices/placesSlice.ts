@@ -112,7 +112,7 @@ const initialState: PlacesState = {
   selectedCategoryIds: [],
 };
 
-const authKey = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyIxIjoiTVRnNU5qQXkiLCIyIjoiTlRVNE9BPT0iLCJpc3MiOiJodHRwczovL0J1c2luZXNzLmxvY2FsZXhwbG9yZXJzLmNvbSIsImF1ZCI6Imh0dHBzOi8vQnVzaW5lc3MubG9jYWxleHBsb3JlcnMuY29tIiwiZXhwIjoxNzU2ODc2ODI5LCJuYmYiOjE3NTY3OTA0Mjl9.hB_mGjmTrtEsac_mDO41Ja_Hl2LzFKPe9rHKgrKMR7w";
+const authKey = process.env.NEXT_PUBLIC_TOKEN || '';
 
 //remove the function in the future if it is not used
 const findCategoryNodeById = (roots: CategoryNode[], id: number): CategoryNode | null => {

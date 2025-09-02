@@ -83,7 +83,7 @@
   --color-deals: #3EA0A2;
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --color-text-primary: #ededed;
     --color-text-secondary: #a3a3a3;
@@ -92,7 +92,7 @@
     --color-background-secondary: #1a1a1a;
     --color-border: #404040;
   }
-}
+} */
 
 
 

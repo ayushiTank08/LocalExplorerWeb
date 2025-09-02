@@ -9,7 +9,7 @@ import MapPopup from "./MapPopup";
 import CategoryPanel from "./CategoryPanel";
 import { Button, IconButton } from "@nextforge/ui";
 
-mapboxgl.accessToken = "pk.eyJ1IjoiZy10c3ZldGtvdmEiLCJhIjoiY20yd2RxYm5iMDZiNTJsb3dldzNiczNocyJ9.gPwWpNSABKvpITucL6E6uQ";
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
 export const mapIconGroups = [
   {

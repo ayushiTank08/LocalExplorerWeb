@@ -69,22 +69,8 @@ const Footer: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex flex-col items-end">
-              <div className="text-gray-400 text-xs mb-1">POWERED BY</div>
-              <div className="flex items-center text-black font-bold text-sm">
-                <span>L</span>
-                <span className="w-3 h-3 bg-yellow-500 rounded-full mx-1 flex items-center justify-center">
-                  <span className="text-[var(--color-background)] text-xs">📍</span>
-                </span>
-                <span>CAL</span>
-              </div>
-              <div className="flex items-center text-black font-bold text-sm">
-                <span>EXPL</span>
-                <span className="w-3 h-3 bg-blue-400 rounded-full mx-1 flex items-center justify-center">
-                  <span className="text-[var(--color-background)] text-xs">📍</span>
-                </span>
-                <span>RERS</span>
-              </div>
+            <div className="flex flex-col items-start">
+              <img src="/assets/Powered-by-Local-Explorer.png" alt="Local Explorers Logo" className="h-16" />
             </div>
           </div>
 
