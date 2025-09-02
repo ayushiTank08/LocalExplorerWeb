@@ -1,17 +1,13 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from 'next/navigation';
 import { useAppSelector } from '../../../store/hooks';
 import type { RootState } from '../../../store';
 import type { Place } from '../../../store/slices/placesSlice';
 
-type SearchParams = { id?: string };
-
-interface PlaceDetailPageProps {
-  searchParams: SearchParams;
-}
-
-const PlaceDetailPage: React.FC<PlaceDetailPageProps> = ({ searchParams }) => {
-  const id = searchParams?.id;
+function DetailsContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams?.get('id');
   const { places, categories } = useAppSelector((state: RootState) => state.places);
   const [currentPlace, setCurrentPlace] = useState<Place | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -571,6 +567,12 @@ const PlaceDetailPage: React.FC<PlaceDetailPageProps> = ({ searchParams }) => {
       </div>
     </div>
   );
-};
+}
 
-export default PlaceDetailPage;
+export default function PlaceDetailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DetailsContent />
+    </Suspense>
+  );
+}

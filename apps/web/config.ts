@@ -1,2 +1,2 @@
-export const MAPBOX_TOKEN = import.meta.env.MAPBOX_ACCESS_TOKEN;
-export const API_TOKEN = import.meta.env.API_TOKEN;
+export const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+export const API_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN || '';
