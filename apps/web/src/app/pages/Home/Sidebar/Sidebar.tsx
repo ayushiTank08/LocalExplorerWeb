@@ -99,9 +99,9 @@ const Sidebar: React.FC = () => {
                 id={`place-${p.Id}`}
                 onMouseEnter={() => dispatch(setHoveredPlace(p))}
                 onMouseLeave={() => dispatch(clearHoveredPlace())}
-                // onClick={() => {
-                //   router.push(`/pages/DetailsPage?id=${p.Id}`);
-                // }}
+                onClick={() => {
+                  router.push(`/pages/DetailsPage?id=${p.Id}`);
+                }}
                 className={`w-full cursor-pointer rounded-lg ${selectedPlace?.Id === p.Id ? "border-2 border-orange-500" : ""}`}
               >
                 <PlaceCard
