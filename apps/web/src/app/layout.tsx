@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Metadata } from "next";
+import { initTokenRefresh } from "@/utils/tokenRefresh";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "../store/StoreProvider";
@@ -25,6 +26,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [isSearchActive, setIsSearchActive] = useState(false);
+
+  useEffect(() => {
+    const cleanup = initTokenRefresh();
+    return () => {
+      cleanup?.();
+    };
+  }, []);
 
   const toggleSearch = () => {
     setIsSearchActive(!isSearchActive);

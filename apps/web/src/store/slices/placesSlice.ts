@@ -87,12 +87,14 @@ export interface PlacesState {
   categoriesLastFetchedAt: number | null;
   selectedTopCategoryId: number | null;
   selectedCategoryIds: number[];
+  token: string;
 }
 
 const initialState: PlacesState = {
   places: [],
   allPlaces: [],
   selectedPlace: null,
+  token: process.env.NEXT_PUBLIC_TOKEN || '',
   hoveredPlace: null,
   defaultLocation: null,
   loading: false,
@@ -112,7 +114,7 @@ const initialState: PlacesState = {
   selectedCategoryIds: [],
 };
 
-const authKey = process.env.NEXT_PUBLIC_TOKEN || '';
+const selectToken = (state: { places: PlacesState }) => state.places.token;
 
 //remove the function in the future if it is not used
 const findCategoryNodeById = (roots: CategoryNode[], id: number): CategoryNode | null => {
@@ -141,7 +143,9 @@ const collectDescendantCategoryIds = (node: CategoryNode | null): number[] => {
 
 export const fetchDefaultLocation = createAsyncThunk(
   'places/fetchDefaultLocation',
-  async () => {
+  async (_, { getState }) => {
+    const state = getState() as { places: PlacesState };
+    const authKey = state.places.token;
     const response = await fetch(
       'https://tsunamiapiv4.localexplorers.com/api/Content/v4/getDefaultLocation?appName=MC',
       {
@@ -165,7 +169,9 @@ export const fetchDefaultLocation = createAsyncThunk(
 
 export const fetchCategories = createAsyncThunk(
   'places/fetchCategories',
-  async (params: { languageId?: number; filterType?: number } | undefined) => {
+  async (params: { languageId?: number; filterType?: number } | undefined, { getState }) => {
+    const state = getState() as { places: PlacesState };
+    const authKey = state.places.token;
     const payload = {
       LanguageId: params?.languageId ?? 1,
       FilterType: params?.filterType ?? 1,
@@ -224,7 +230,9 @@ const filterPlaces = (items: Place[], searchText: string, regionId: number, cate
 
 export const fetchRegions = createAsyncThunk(
   'places/fetchRegions',
-  async (params: { customerId?: number; pageNumber?: number; pageSize?: number; sectionId?: number; languageId?: number } | undefined) => {
+  async (params: { customerId?: number; pageNumber?: number; pageSize?: number; sectionId?: number; languageId?: number } | undefined, { getState }) => {
+    const state = getState() as { places: PlacesState };
+    const authKey = state.places.token;
     const payload = {
       CustomerId: params?.customerId ?? 5588,
       PageNumber: params?.pageNumber ?? 1,
@@ -264,7 +272,9 @@ export const fetchRegions = createAsyncThunk(
 
 export const fetchPlaces = createAsyncThunk(
   'places/fetchPlaces',
-  async (params: { latitude: number; longitude: number; searchText?: string; regionId?: number }) => {
+  async (params: { latitude: number; longitude: number; searchText?: string; regionId?: number }, { getState }) => {
+    const state = getState() as { places: PlacesState };
+    const authKey = state.places.token;
     const payload = {
       CustomerId: 5775,
       LanguageCode: 'en-US',
@@ -353,6 +363,21 @@ const placesSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setToken: (state, action: PayloadAction<string>) => {
+      const oldToken = state.token;
+      const newToken = action.payload;
+      const refreshToken = async (): Promise<void> => {
+        try {
+          state.token = newToken;
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('NEXT_PUBLIC_TOKEN', newToken);
+          }
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+        }
+      };
+      refreshToken();
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -410,7 +435,22 @@ const placesSlice = createSlice({
   },
 });
 
-export const { setSelectedPlace, clearSelectedPlace, setHoveredPlace, clearHoveredPlace, toggleSidebar, setSidebarOpen, clearError, setLoading, setSearchText, setSelectedRegionId, setSelectedTopCategoryId, setSelectedCategoryIds, toggleSelectedCategoryId } = placesSlice.actions;
+export const { 
+  setSelectedPlace, 
+  clearSelectedPlace, 
+  setHoveredPlace, 
+  clearHoveredPlace, 
+  toggleSidebar, 
+  setSidebarOpen, 
+  clearError, 
+  setLoading, 
+  setSearchText, 
+  setSelectedRegionId, 
+  setSelectedTopCategoryId, 
+  setSelectedCategoryIds, 
+  toggleSelectedCategoryId,
+  setToken 
+} = placesSlice.actions;
 export default placesSlice.reducer;
 
 export const applySearchText = (text: string) => async (dispatch: any) => {
