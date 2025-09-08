@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { apiRequest } from '@/utils/api';
 
 export interface Place {
   Id: number;
@@ -87,12 +88,19 @@ export interface PlacesState {
   categoriesLastFetchedAt: number | null;
   selectedTopCategoryId: number | null;
   selectedCategoryIds: number[];
+  token: string;
 }
+
+const loadTokenFromStorage = (): string => {
+  if (typeof window === 'undefined') return '';
+  return localStorage.getItem('authToken') || '';
+};
 
 const initialState: PlacesState = {
   places: [],
   allPlaces: [],
   selectedPlace: null,
+  token: loadTokenFromStorage(),
   hoveredPlace: null,
   defaultLocation: null,
   loading: false,
@@ -112,7 +120,7 @@ const initialState: PlacesState = {
   selectedCategoryIds: [],
 };
 
-const authKey = process.env.NEXT_PUBLIC_TOKEN || '';
+const selectToken = (state: { places: PlacesState }) => state.places.token;
 
 //remove the function in the future if it is not used
 const findCategoryNodeById = (roots: CategoryNode[], id: number): CategoryNode | null => {
@@ -142,24 +150,22 @@ const collectDescendantCategoryIds = (node: CategoryNode | null): number[] => {
 export const fetchDefaultLocation = createAsyncThunk(
   'places/fetchDefaultLocation',
   async () => {
-    const response = await fetch(
-      'https://tsunamiapiv4.localexplorers.com/api/Content/v4/getDefaultLocation?appName=MC',
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          AuthKey: authKey,
-        },
+    const response = await apiRequest<{ Data: DefaultLocation }>({
+      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getDefaultLocation',
+      method: 'PUT',
+      params: {
+        appName: 'MC',
+        customerid: 5588
       }
-    );
-    const data = await response.json();
-    const dl = data?.Data ?? data;
-    const mapped: DefaultLocation = {
-      Latitude: Number(dl?.Latitude),
-      Longitude: Number(dl?.Longitude),
-      Radius: dl?.Radius,
-    };
-    return mapped;
+    });
+    return response.Data;
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = getState() as { places: PlacesState };
+      const { defaultLocation } = state.places;
+      return !defaultLocation;
+    }
   }
 );
 
@@ -170,20 +176,12 @@ export const fetchCategories = createAsyncThunk(
       LanguageId: params?.languageId ?? 1,
       FilterType: params?.filterType ?? 1,
     };
-    const response = await fetch(
-      'https://tsunamiapiv4.localexplorers.com/api/content/v4/getmastercategorygrouplocationsummary',
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          AuthKey: authKey,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-    const data = await response.json();
-    const list: CategoryNode[] = data?.Data || [];
-    return list;
+    const response = await apiRequest<{ Data: CategoryNode[] }>({
+      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getmastercategorygrouplocationsummary',
+      method: 'PUT',
+      body: payload
+    });
+    return response.Data;
   },
   {
     condition: (_, { getState }) => {
@@ -233,20 +231,13 @@ export const fetchRegions = createAsyncThunk(
       LanguageId: params?.languageId ?? 1,
     };
 
-    const response = await fetch(
-      'https://tsunamiapiv4.localexplorers.com/api/content/v4/getcustomerregions',
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          AuthKey: authKey,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-    const data = await response.json();
-    const list: Region[] = data?.Data?.List || [];
-    return list;
+    const response = await apiRequest<{ Data: { List: Region[] } }>({
+      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getcustomerregions',
+      method: 'PUT',
+      body: payload
+    });
+    
+    return response.Data?.List || [];
   },
   {
     condition: (_, { getState }) => {
@@ -284,21 +275,19 @@ export const fetchPlaces = createAsyncThunk(
       CheckwithDefault: true,
     };
 
-    const response = await fetch(
-      'https://tsunamiapiv4.localexplorers.com/api/content/v4/getlocations',
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          AuthKey: authKey,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const data = await response.json();
-    const list = data?.Data?.List || [];
-    return list;
+    const response = await apiRequest<{ Data: { List: Place[] } }>({
+      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getlocations',
+      method: 'PUT',
+      body: payload
+    });
+        
+    if (!response || !response.Data) {
+      console.error('Invalid response format from places API');
+      return [];
+    }
+    
+    const places = response.Data.List || [];
+    return places;
   }
 );
 
@@ -353,6 +342,9 @@ const placesSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setToken: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -404,13 +396,29 @@ const placesSlice = createSlice({
         state.categoriesError = action.error.message || 'Failed to fetch categories';
       })
       .addCase(fetchPlaces.rejected, (state, action) => {
+        console.error('fetchPlaces.rejected:', action.error);
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch places';
       });
   },
 });
 
-export const { setSelectedPlace, clearSelectedPlace, setHoveredPlace, clearHoveredPlace, toggleSidebar, setSidebarOpen, clearError, setLoading, setSearchText, setSelectedRegionId, setSelectedTopCategoryId, setSelectedCategoryIds, toggleSelectedCategoryId } = placesSlice.actions;
+export const { 
+  setSelectedPlace, 
+  clearSelectedPlace, 
+  setHoveredPlace, 
+  clearHoveredPlace, 
+  toggleSidebar, 
+  setSidebarOpen, 
+  clearError, 
+  setLoading, 
+  setSearchText, 
+  setSelectedRegionId, 
+  setSelectedTopCategoryId, 
+  setSelectedCategoryIds, 
+  toggleSelectedCategoryId,
+  setToken 
+} = placesSlice.actions;
 export default placesSlice.reducer;
 
 export const applySearchText = (text: string) => async (dispatch: any) => {
