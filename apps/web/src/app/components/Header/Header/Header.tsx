@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
         </div>
       )}
 
-      <div className="flex h-16 px-4 justify-center items-center gap-2 self-stretch bg-[var(--color-background)] relative">
+      <div className="flex h-24 px-6 justify-center items-center gap-2 self-stretch bg-[var(--color-background)] relative">
         <div className="lg:hidden flex items-center justify-between w-full">
           <Button
             onClick={toggleMobileMenu}

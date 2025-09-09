@@ -64,9 +64,10 @@ export function LocationDetailsSubheader({
   };
 
   return (
-    <div ref={subheaderRef} className="bg-[#E3EEF3] transition-all duration-300">
-      <div className="w-full mt-6 bg-[var(--color-primary)] relative">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
+    <div ref={subheaderRef} className="bg-[var(--color-primary-lighter)] transition-all duration-300">
+      <div className="px-6">
+      <div className="w-full mt-8 bg-[var(--color-primary)] relative rounded-md">
+        <div className="mx-6 flex items-center justify-between px-4 py-4">
           <div className="flex items-center relative">
             <div className="absolute -top-12 left-0">
               <div className="w-20 h-20 rounded-full flex items-center justify-center">
@@ -99,6 +100,7 @@ export function LocationDetailsSubheader({
             </button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
