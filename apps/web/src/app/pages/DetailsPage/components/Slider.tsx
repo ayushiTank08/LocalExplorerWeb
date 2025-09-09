@@ -1,27 +1,44 @@
 import React from 'react';
 import { Button } from "@nextforge/ui";
 
+const DUMMY_IMAGES = Array.from({ length: 25 }, (_, i) => 
+  `https://picsum.photos/1000/700?random=${i}`
+);
+
 interface ImageGalleryProps {
-  images: string[];
+  images?: string[];
   currentImageIndex: number;
   onImageChange: (index: number) => void;
+  onImageClick?: () => void;
 }
 
-export const ImageGallery: React.FC<ImageGalleryProps> = React.memo(({ 
-  images, 
+export const Slider: React.FC<ImageGalleryProps> = React.memo(({ 
+  images = DUMMY_IMAGES,
   currentImageIndex, 
-  onImageChange 
+  onImageChange,
+  onImageClick
 }) => {
   if (images.length <= 0) return null;
 
   return (
     <div className="relative rounded-lg overflow-hidden bg-white shadow-lg">
       <div className="h-113 bg-gray-300 relative">
-        <img
-          src={images[currentImageIndex]}
-          alt="Gallery"
-          className="w-full h-full object-cover"
-        />
+        <div className="relative w-full h-full">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onImageClick?.();
+            }}
+            className="w-full h-full focus:outline-none"
+            aria-label="View full screen gallery"
+          >
+            <img
+              src={images[currentImageIndex]}
+              alt="Gallery"
+              className="w-full h-full object-cover"
+            />
+          </button>
+        </div>
 
         {images.length > 1 && (
           <>
@@ -56,12 +73,18 @@ export const ImageGallery: React.FC<ImageGalleryProps> = React.memo(({
           </div>
         )}
 
-        <Button className="absolute bottom-3 right-4 bg-white/90 backdrop-blur-sm rounded px-2 py-1 text-sm font-medium text-gray-700 hover:bg-white transition-colors">
-          Show all (+{Math.max(0, images.length - 3)})
+        <Button 
+          className="absolute bottom-3 right-4 bg-white/90 backdrop-blur-sm rounded px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onImageClick?.();
+          }}
+        >
+          Show all (+{images.length})
         </Button>
       </div>
     </div>
   );
 });
 
-ImageGallery.displayName = 'ImageGallery';
+Slider.displayName = 'Slider';

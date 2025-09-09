@@ -14,7 +14,7 @@ const StaticMap: React.FC<StaticMapProps> = ({
   latitude,
   longitude,
   zoom = 14,
-  className = 'w-full h-full rounded-lg',
+  className = 'w-[400px] h-[360px] rounded-lg',
   markerColor = '#3b82f6',
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -30,9 +30,9 @@ const StaticMap: React.FC<StaticMapProps> = ({
     const loadMap = async () => {
       try {
         const mapImageUrl = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/
-          pin-s+${markerColor.slice(1)}(${longitude},${latitude})/
+          pin-l+${markerColor.slice(1)}(${longitude},${latitude})/
           ${longitude},${latitude},${zoom},0/
-          800x400@2x
+          800x720@2x
           ?access_token=${mapboxToken}&attribution=false&logo=false`.replace(/\s+/g, '');
 
         const img = document.createElement('img');

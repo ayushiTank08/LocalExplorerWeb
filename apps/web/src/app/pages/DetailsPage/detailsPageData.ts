@@ -99,3 +99,72 @@ export const coupons = [
     expiration: "December 15, 2024",
   },
 ];
+
+export const contactInfo = {
+  address: "3902 Sunshine Palm Way, Kissimmee, FL 34747",
+  phone: "901-745-0354",
+  website: {
+    url: "https://www.starlight.com/EmberNights",
+    display: "www.starlight.com/EmberNights"
+  },
+  socialMedia: [
+    { name: "facebook", icon: "/icons/facebook.svg" },
+    { name: "x", icon: "/icons/x.svg" },
+    { name: "instagram", icon: "/icons/instagram.svg" },
+    { name: "youtube", icon: "/icons/youtube.svg" },
+    { name: "tripadvisor", icon: "/icons/tripadvisor.svg" },
+    { name: "yelp", icon: "/icons/yelp.svg" }
+  ]
+};
+
+export const businessHours = {
+  weekdays: "Monday - Friday (8 AM to 6 PM)",
+  weekend: "Saturday - Sunday (8 AM to 10 PM)"
+};
+
+export const highlights = [
+  "Special Event Booking",
+  "Tours",
+  "Classes and Education",
+  "Group Events"
+];
+
+export const weatherInfo = {
+  temperature: "24°",
+  location: "Ocala County",
+  dateTime: "09:30 • 03/08",
+  forecast: ["Today", "Thu", "Fri", "Sat", "Sun", "Mon"]
+};
+
+export const reviews = [
+  {
+    user: "Sarah M.",
+    time: "3 hours ago",
+    content: "Always fresh pours!",
+    location: "Lake Oklawaha RV Park",
+    image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop",
+    hasImage: true,
+  },
+  {
+    user: "Mike C.",
+    time: "7 hours ago",
+    content: "Beers!",
+    location: "Lake Oklawaha RV Park",
+    hasImage: false,
+  },
+  {
+    user: "Emily R.",
+    time: "a day ago",
+    content: "Always fresh pours!",
+    location: "Lake Oklawaha RV Park",
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop",
+    hasImage: true,
+  },
+  {
+    user: "John D.",
+    time: "2 days ago",
+    content: "Great experience!",
+    location: "Lake Oklawaha RV Park",
+    hasImage: false,
+  }
+];

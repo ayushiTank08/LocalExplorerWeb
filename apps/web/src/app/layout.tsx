@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from 'next/navigation';
+import { useAppSelector } from '../store/hooks';
 import type { Metadata } from "next";
 import { initTokenRefresh } from "@/utils/tokenRefresh";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -8,7 +10,26 @@ import "./globals.css";
 import StoreProvider from "../store/StoreProvider";
 import Header from "./components/Header/Header/Header";
 import SubHeader from "./components/Header/SubHeader/SubHeader";
+import { LocationDetailsSubheader } from "./components/Header/SubHeader/LocationDetailsSubheader";
 import Footer from "./components/Footer/Footer";
+
+function SubHeaderWrapper({ isSearchActive }: { isSearchActive: boolean }) {
+  const pathname = usePathname();
+  const { selectedPlace } = useAppSelector((state: any) => state.places);
+  
+  const isDetailsPage = pathname?.startsWith('/pages/DetailsPage');
+
+  if (isDetailsPage && selectedPlace) {
+    return (
+      <LocationDetailsSubheader 
+        title={selectedPlace.Title}
+        category={selectedPlace.Category || 'Location'}
+        imageUrl={selectedPlace.Thumb || selectedPlace.Image}
+      />
+    );
+  }
+  return <SubHeader isSearchActive={isSearchActive} />;
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +41,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default function RootLayout({
+function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -50,7 +71,7 @@ export default function RootLayout({
         <StoreProvider>
           <div className="flex-1 flex flex-col">
             <Header onSearchToggle={toggleSearch} />
-            <SubHeader isSearchActive={isSearchActive} />
+            <SubHeaderWrapper isSearchActive={isSearchActive} />
             <main className="flex-1 bg-[var(--color-primary-lighter)]">{children}</main>
           </div>
           <Footer />
@@ -59,3 +80,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+export default RootLayout;

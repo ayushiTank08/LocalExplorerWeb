@@ -2,13 +2,17 @@
 import React, { Suspense, useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
-import { useAppSelector } from '../../../store/hooks';
+import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 import type { RootState } from '../../../store';
 import type { Place } from '../../../store/slices/placesSlice';
-import { amenities, passes, events, deals, coupons } from './detailsPageData';
+import { setSelectedPlace } from '../../../store/slices/placesSlice';
+import { fetchLocationDetails, selectLocationDetails, selectLocationDetailsLoading, selectLocationDetailsError } from '../../../store/slices/locationDetailsSlice';
+import { passes, events, deals, coupons, reviews } from './detailsPageData';
+import type { LocationDetails } from '../../../store/slices/locationDetailsSlice';
+import { ImageGalleryPopup } from './components/ImageGalleryPopup';
 import { Button } from "@nextforge/ui";
 
-const ImageGallery = dynamic(() => import('./components/ImageGallery').then(mod => mod.ImageGallery), { ssr: false });
+const Slider = dynamic(() => import('./components/Slider').then(mod => mod.Slider), { ssr: false });
 const StaticMap = dynamic(() => import('./components/StaticMap').then(mod => mod.default), { ssr: false });
 const { NotFoundState } = {
   NotFoundState: dynamic(() => import('./components/PlaceState').then(mod => mod.NotFoundState), { ssr: false })
@@ -19,10 +23,47 @@ const placesSelector = (state: RootState) => state.places;
 function DetailsContent() {
   const searchParams = useSearchParams();
   const id = searchParams?.get('id');
-  const { places, categories } = useAppSelector(placesSelector);
-  const [currentPlace, setCurrentPlace] = useState<Place | null>(null);
+  const { places, categories, selectedPlace: currentPlace } = useAppSelector(placesSelector);
+  const locationDetails = useAppSelector(selectLocationDetails);
+  const isLocationDetailsLoading = useAppSelector(selectLocationDetailsLoading);
+  const locationDetailsError = useAppSelector(selectLocationDetailsError);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+  }, [id, places, currentPlace]);
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [stamped, setStamped] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+
+  const actionButtons = [
+    { icon: "/assets/Location_Details_Logos/Phone.svg", alt: "Call" },
+    { icon: "/assets/Location_Details_Logos/Ways.svg", alt: "Directions" },
+    { icon: "/assets/Location_Details_Logos/Share.svg", alt: "Share" },
+    { icon: "/assets/Location_Details_Logos/Save.svg", alt: "Save" },
+    { icon: "/assets/Location_Details_Logos/Like.svg", alt: "Like" },
+    { icon: "/assets/Location_Details_Logos/Pin.svg", alt: "Pin" },
+  ];
+
+  const fetchPlaceById = useCallback(async (placeId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/places/${placeId}`);
+      if (response.ok) {
+        const data = await response.json();
+        dispatch(setSelectedPlace(data));
+      } else {
+        const errorText = await response.text();
+        console.error('Failed to fetch place:', errorText);
+        dispatch(setSelectedPlace(null));
+      }
+    } catch (error) {
+      console.error('Error fetching place:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch]);
 
   const foundPlace = useMemo(() => {
     if (!id || places.length === 0) return null;
@@ -30,8 +71,23 @@ function DetailsContent() {
   }, [id, places]);
 
   useEffect(() => {
-    setCurrentPlace(foundPlace);
-  }, [foundPlace]);
+    if (foundPlace) {
+      dispatch(setSelectedPlace(foundPlace));
+      setIsLoading(false);
+      if (foundPlace.Id) {
+        dispatch(fetchLocationDetails({ 
+          locationId: foundPlace.Id, 
+          customerId: 5588
+        }));
+      }
+    } else if (id) {
+      fetchPlaceById(id);
+    }
+    
+    return () => {
+      dispatch({ type: 'locationDetails/clearLocationDetails' });
+    };
+  }, [foundPlace, id, fetchPlaceById, dispatch]);
 
   const getCategoryNames = useCallback((place: Place): string[] => {
     if (!place?.Category || !categories) return [];
@@ -93,6 +149,14 @@ function DetailsContent() {
     setCurrentImageIndex(index);
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
   if (!currentPlace) {
     return <NotFoundState />;
   }
@@ -102,10 +166,11 @@ function DetailsContent() {
       <div className="max-w-9xl mx-auto px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <ImageGallery
+            <Slider
               images={images}
               currentImageIndex={currentImageIndex}
               onImageChange={handleImageSelect}
+              onImageClick={() => setIsGalleryOpen(true)}
             />
 
             <div className="bg-[var(--color-background)] p-8 rounded-lg">
@@ -136,77 +201,67 @@ function DetailsContent() {
                     <img src="/assets/Icons/Check-in.svg" alt="Check-In" className="w-8 h-8" />
                     <span className="text-base">Check-In</span>
                   </Button>
-                  <div className="ml-auto flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="p-2 rounded-full"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      </svg>
-                    </Button>
-                  </div>
-                </div>
+                  <div className="ml-auto flex gap-3">
+                    {actionButtons.map((btn, idx) => (
+                      <div
+                        key={idx}
+                        className="group flex items-center rounded-full border border-[var(--color-neutral)]
+                 transition-all duration-300 overflow-hidden 
+                 w-[47px] hover:w-[120px] cursor-pointer"
+                      >
+                        <div className="w-11 h-11 flex justify-center items-center flex-shrink-0">
+                          <img src={btn.icon} alt={btn.alt} className="w-5 h-5" />
+                        </div>
 
-                <div>
-                  <p className="text-gray-700 leading-relaxed">
-                    Escape the ordinary and immerse yourself in nature without sacrificing comfort at {currentPlace.Title}.
-                    Nestled in {fullAddress}, our unique experience offers the perfect blend of rustic charm and modern luxury.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">Amenities</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {amenities.map((item, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <img
-                          src={item.icon}
-                          alt={item.name}
-                          className="w-6 h-6 object-contain"
-                        />
-                        <span className="text-gray-700">{item.name}</span>
+                        <span
+                          className="whitespace-nowrap text-[var(--color-neutral)] text-sm opacity-0 
+                   group-hover:opacity-100 transition-opacity duration-300"
+                        >
+                          {btn.alt}
+                        </span>
                       </div>
                     ))}
                   </div>
+
                 </div>
+                {isLocationDetailsLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
+                  </div>
+                ) : locationDetailsError ? (
+                  <div className="text-red-500 text-center py-4">
+                    Failed to load location details
+                  </div>
+                ) : (
+                  <>
+                    {locationDetails?.Description && (
+                      <div className="text-gray-700 leading-relaxed">
+                        <div 
+                          className="prose max-w-none space-y-4"
+                          dangerouslySetInnerHTML={{ 
+                            __html: locationDetails.Description
+                              .replace(/<p>/g, '<p class="mb-6">')
+                              .replace(/<p><\/p>/g, '')
+                          }} 
+                        />
+                      </div>
+                    )}
+
+                    {locationDetails?.Amenities && locationDetails.Amenities.length > 0 && (
+                      <div>
+                        <h3 className="text-2xl font-semibold text-gray-900 mt-4 mb-4">Amenities</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {locationDetails.Amenities.map((amenity, index) => (
+                            <div key={index} className="flex items-center gap-3">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-700"></span>
+                              <span className="text-gray-700 text-[15px]">{amenity.AmenitieName}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="border-t border-gray-200 my-8"></div>
@@ -370,10 +425,7 @@ function DetailsContent() {
                         <h3 className="font-semibold text-base text-gray-900 mb-2">
                           {deal.title}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-3 leading-relaxed flex-grow line-clamp-2">
-                          {deal.location}
-                        </p>
-                        <div className="flex items-center mt-auto">
+                        <div className="flex items-center">
                           <div className="w-4 h-4 mr-2 flex-shrink-0">
                             <img src="/assets/Icons/Calendar.svg" alt="Date" className="w-4 h-4" />
                           </div>
@@ -381,6 +433,17 @@ function DetailsContent() {
                             {deal.date}
                           </span>
                         </div>
+                        <div className="flex items-center mt-2">
+                          <div className="w-4 h-4 mr-2 flex-shrink-0">
+                            <img src="/assets/Icons/location-pin.svg" alt="Location" className="w-4 h-4" />
+                          </div>
+                          <span className="text-[var(--color-secondary)] text-sm">
+                            {deal.location}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2 leading-relaxed flex-grow line-clamp-2">
+                          {deal.description}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -425,26 +488,7 @@ function DetailsContent() {
                           <span className="font-bold">{coupon.expiration}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-[var(--color-secondary)] font-medium">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
+                          <img src="/assets/Icons/location-pin.svg" alt="Location" className="w-4 h-4" />
                           <span className="text-[15px]">{coupon.location}</span>
                         </div>
 
@@ -469,7 +513,6 @@ function DetailsContent() {
                   <div className="flex -space-x-2">
                     {[
                       "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-                      "https://images.unsplash.com/photo-1494790108755-2616b612b5bc?w=40&h=40&fit=crop&crop=face",
                       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
                       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
                       "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face",
@@ -485,40 +528,8 @@ function DetailsContent() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-4">
-                  {[
-                    {
-                      user: "Sarah M.",
-                      time: "3 hours ago",
-                      content: "Always fresh pours!",
-                      location: "Lake Oklawaha RV Park",
-                      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop",
-                      hasImage: true,
-                    },
-                    {
-                      user: "Mike C.",
-                      time: "7 hours ago",
-                      content: "Beers!",
-                      location: "Lake Oklawaha RV Park",
-                      hasImage: false,
-                    },
-                    {
-                      user: "Emily R.",
-                      time: "a day ago",
-                      content: "Always fresh pours!",
-                      location: "Lake Oklawaha RV Park",
-                      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop",
-                      hasImage: true,
-                    },
-                    {
-                      user: "John D.",
-                      time: "2 days ago",
-                      content: "Great experience!",
-                      location: "Lake Oklawaha RV Park",
-                      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=300&h=200&fit=crop",
-                      hasImage: true,
-                    },
-                  ].map((post, index) => (
+                <div className="flex flex-col gap-2">
+                  {reviews.map((post, index) => (
                     <div
                       key={index}
                       className="w-full bg-white border rounded-lg p-4"
@@ -545,7 +556,7 @@ function DetailsContent() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-4 mt-3 text-gray-500 text-sm">
+                      <div className="flex items-center gap-2 mt-3 text-gray-500 text-sm">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -582,10 +593,19 @@ function DetailsContent() {
                 <div className="mt-8 flex justify-center">
                   <Button
                     variant="outline"
-                    className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"                  >
+                    // onClick={() => setIsGalleryOpen(true)}
+                    className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
+                  >
                     Show all (+23)
                   </Button>
                 </div>
+
+                <ImageGalleryPopup
+                  isOpen={isGalleryOpen}
+                  onClose={() => setIsGalleryOpen(false)}
+                  images={images}
+                  initialIndex={currentImageIndex}
+                />
               </div>
             </div>
           </div>
@@ -619,13 +639,22 @@ function DetailsContent() {
             </div>
 
             <div className="rounded-lg space-y-3 text-sm text-gray-700">
-              <div className="flex items-center gap-2">
-                <img src="/assets/Icons/Location.svg" alt="Location" className="w-5 h-5 text-blue-600" />
-                3902 Sunshine Palm Way, Kissimmee, FL 34747
+              <div>
+                <div className="flex items-center gap-2">
+                  <img
+                    src="/assets/Icons/Location.svg"
+                    alt="Location"
+                    className="w-5 h-5 text-blue-600"
+                  />
+                  <span className="font-medium">Address:</span>
+                </div>
+                <p className="text-gray-700 pl-7">
+                  3902 Sunshine Palm Way, Kissimmee, FL 34747
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <img src="/assets/Icons/Call.svg" alt="Call" className="w-5 h-5 text-blue-600" />
-                3902 Sunshine Palm Way, Kissimmee, FL 34747                901-745-0354
+                901-745-0354
               </div>
               <div className="flex items-center gap-2">
                 <img src="/assets/Icons/World.svg" alt="World" className="w-5 h-5 text-blue-600" />
@@ -639,14 +668,14 @@ function DetailsContent() {
                 </a>
               </div>
 
-              <div className="flex gap-3 pt-2">
+              {/* <div className="flex gap-3 pt-2">
                 <img src="/icons/facebook.svg" alt="facebook" className="w-6 h-6" />
                 <img src="/icons/x.svg" alt="x" className="w-6 h-6" />
                 <img src="/icons/instagram.svg" alt="instagram" className="w-6 h-6" />
                 <img src="/icons/youtube.svg" alt="youtube" className="w-6 h-6" />
                 <img src="/icons/tripadvisor.svg" alt="tripadvisor" className="w-6 h-6" />
                 <img src="/icons/yelp.svg" alt="yelp" className="w-6 h-6" />
-              </div>
+              </div> */}
             </div>
 
             <div className="border-t border-gray-300 my-4"></div>
