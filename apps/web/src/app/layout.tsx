@@ -12,6 +12,7 @@ import Header from "./components/Header/Header/Header";
 import SubHeader from "./components/Header/SubHeader/SubHeader";
 import { LocationDetailsSubheader } from "./components/Header/SubHeader/LocationDetailsSubheader";
 import Footer from "./components/Footer/Footer";
+import { NotificationCenter } from "@/components/Notifications/NotificationCenter";
 
 function SubHeaderWrapper({ isSearchActive }: { isSearchActive: boolean }) {
   const pathname = usePathname();
@@ -67,14 +68,17 @@ function RootLayout({
         <meta name="color-scheme" content="light" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body className="bg-white text-gray-900 antialiased flex flex-col min-h-screen">
+      <body className="min-h-screen flex flex-col">
         <StoreProvider>
-          <div className="flex-1 flex flex-col">
-            <Header onSearchToggle={toggleSearch} />
+          <div className="min-h-screen flex flex-col">
+            <NotificationCenter />
+            <Header onSearchToggle={() => setIsSearchActive(!isSearchActive)} />
             <SubHeaderWrapper isSearchActive={isSearchActive} />
-            <main className="flex-1 bg-[var(--color-primary-lighter)]">{children}</main>
+            <main className="flex-grow bg-[var(--color-primary-lighter)] pb-16 lg:pb-0">
+              {children}
+            </main>
+            <Footer />
           </div>
-          <Footer />
         </StoreProvider>
       </body>
     </html>

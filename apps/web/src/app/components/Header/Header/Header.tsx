@@ -3,13 +3,16 @@
 import React, { useState } from 'react';
 import Link from "next/link";
 import { Button } from "@nextforge/ui";
+import { LoginModal } from "../../Login/LoginModal";
 
 interface HeaderProps {
   onSearchToggle?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
+  const [activeTab, setActiveTab] = useState('explore');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -97,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
         </div>
       )}
 
-      <div className="flex h-24 px-6 justify-center items-center gap-2 self-stretch bg-[var(--color-background)] relative">
+      <div className="flex h-24 justify-center items-center gap-2 self-stretch bg-[var(--color-background)] relative max-w-[1440px] mx-auto w-full px-6 lg:px-0">
         <div className="lg:hidden flex items-center justify-between w-full">
           <Button
             onClick={toggleMobileMenu}
@@ -181,7 +184,10 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
             </Button>
           </div>
           <div className="flex h-10 px-4 py-2 justify-center items-center gap-2 rounded border border-text-primary relative border-[var(--color-primary)]">
-            <Button className="text-text-primary font-body text-base font-normal text-[var(--color-primary)] cursor-pointer">
+            <Button 
+              onClick={() => setIsLoginModalOpen(true)}
+              className="text-text-primary font-body text-base font-normal text-[var(--color-primary)] cursor-pointer"
+            >
               Login
             </Button>
           </div>
@@ -208,6 +214,10 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
           </button>
         </div>
       </nav>
+
+      {isLoginModalOpen && (
+        <LoginModal onClose={() => setIsLoginModalOpen(false)} />
+      )}
     </>
   );
 };

@@ -32,8 +32,8 @@ export default function Home() {
       {/* <Header onSearchToggle={toggleSearch} /> */}
       {/* <SubHeader isSearchActive={isSearchActive} /> */}
 
-      <div className="hidden lg:flex flex-1 flex-row px-6 items-start gap-6 bg-[var(--color-primary-lighter)] relative">
-        <div className={`h-full transition-transform duration-300`}>
+      <div className="hidden lg:flex flex-1 flex-row items-start gap-6 bg-[var(--color-primary-lighter)] relative w-full max-w-[1440px] mx-auto">
+        <div className="h-full transition-transform duration-300">
           <Sidebar />
         </div>
         <div className="flex-1 h-full">
