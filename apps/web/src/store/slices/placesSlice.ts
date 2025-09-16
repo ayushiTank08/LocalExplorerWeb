@@ -40,6 +40,19 @@ export interface Place {
   IsProductionOnly: boolean | null;
   Image: string | null;
   Features: any[];
+  CustomHours?: string;
+  Activities?: Array<{
+    Id: number;
+    FirstName: string;
+    LastName: string;
+    Profile: string;
+    Comment: string;
+    CreatedDate: number;
+    PhotoURL: string;
+    LikeCount: number;
+    CommentCount: number;
+    LoyaltyEventId: number;
+  }>;
 }
 
 export interface Region {

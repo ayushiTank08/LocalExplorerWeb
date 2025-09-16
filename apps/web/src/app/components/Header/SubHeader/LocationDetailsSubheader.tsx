@@ -64,43 +64,90 @@ export function LocationDetailsSubheader({
   };
 
   return (
-    <div ref={subheaderRef} className="bg-[var(--color-primary-lighter)] transition-all duration-300">
-      <div className="px-6">
-      <div className="w-full mt-8 bg-[var(--color-primary)] relative rounded-md">
-        <div className="mx-6 flex items-center justify-between px-4 py-4">
-          <div className="flex items-center relative">
-            <div className="absolute -top-12 left-0">
+    <div
+      ref={subheaderRef}
+      className="bg-[var(--color-primary-lighter)] transition-all duration-300"
+    >
+      <div className="px-6 lg:px-0">
+        <div
+          className="
+        w-full mt-8 bg-[var(--color-primary)] relative rounded-md 
+        max-w-[1440px] mx-auto
+        lg:sticky lg:top-0 lg:z-50
+      "
+        >
+          <div className="lg:hidden px-4 py-6 flex flex-col items-center relative">
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2">
               <div className="w-20 h-20 rounded-full flex items-center justify-center">
                 <img
-                  src={"/assets/Icons/Subheader-logo.svg"}
+                  src="/assets/Icons/Subheader-logo.svg"
                   alt="Logo"
                   className="w-20 h-20 object-contain"
                 />
               </div>
             </div>
-            <span className="text-white font-medium text-xl pl-20">
+            <span className="text-white font-medium text-xl text-center mt-8">
               {title || "Starlight Oasis Glamping"}
             </span>
+
+            <button className="mt-4 bg-yellow-400 text-black text-lg font-medium px-5 py-2 rounded-full flex items-center space-x-2 hover:bg-yellow-500 transition cursor-pointer">
+              <span>Book it</span>
+              <img
+                src="/assets/Icons/Book-btn.svg"
+                alt="Arrow Right"
+                className="w-5 h-5"
+              />
+            </button>
+
+            <div className="mt-4 flex justify-around gap-4 w-full">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  onClick={() => scrollToSection(tab.id)}
+                  className="text-white text-sm"
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex items-center space-x-6">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.id}
-                onClick={() => scrollToSection(tab.id)}
-                className= "text-lg text-white cursor-pointer"
-              >
-                {tab.label}
-              </Button>
-            ))}
+          <div className="hidden lg:flex items-center justify-between gap-6 px-6 py-4 relative">
+            <div className="absolute flex items-center gap-3">
+              <div className="w-20 h-20 rounded-full flex justify-center absolute -top-12">
+                <img
+                  src="/assets/Icons/Subheader-logo.svg"
+                  alt="Logo"
+                  className="w-20 h-20 object-contain"
+                />
+              </div>
+              <span className="text-white font-medium text-lg ml-24">
+                {title || "Starlight Oasis Glamping"}
+              </span>
+            </div>
 
-            <button className="bg-yellow-400 text-black text-lg font-medium px-3 py-1.5 rounded-full flex items-center space-x-1 hover:bg-yellow-500 transition cursor-pointer">
+            <div className="flex items-center gap-6 ml-auto">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  onClick={() => scrollToSection(tab.id)}
+                  className="text-white text-base cursor-pointer"
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
+
+            <button className="bg-yellow-400 text-black text-sm font-medium px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-yellow-500 transition cursor-pointer">
               <span>Book it</span>
-              <img src="/assets/Icons/Book-btn.svg" alt="Arrow Right" className="w-5 h-5" />
+              <img
+                src="/assets/Icons/Book-btn.svg"
+                alt="Arrow Right"
+                className="w-4 h-4"
+              />
             </button>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );

@@ -13,9 +13,9 @@ export interface StaticMapProps {
 const StaticMap: React.FC<StaticMapProps> = ({
   latitude,
   longitude,
-  zoom = 14,
-  className = 'w-[400px] h-[360px] rounded-lg',
-  markerColor = '#3b82f6',
+  zoom = 15,
+  className = 'w-full max-w-[400px] h-[360px] rounded-lg',
+  markerColor = '#C25128',
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const [mapboxToken] = useState(() => process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '');

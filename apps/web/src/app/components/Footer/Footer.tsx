@@ -31,8 +31,8 @@ const Footer: React.FC = () => {
 
   return (
     <>
-      <footer className="hidden lg:block bg-[var(--color-primary-lighter)] py-2 px-6">
-        <div className="mx-auto flex items-center justify-between">
+      <footer className="hidden lg:block bg-[var(--color-primary-lighter)] py-2">
+        <div className="mx-auto flex items-center justify-between max-w-[1440px]">
           <div className="flex items-center gap-4">
             {/* {socialIcons.map((social, index) => (
               <div

@@ -13,11 +13,15 @@ const MapPopup: React.FC<MapPopupProps> = ({ place, onClose }) => {
   return (
     <div className="bg-[var(--color-background)] rounded-lg shadow-lg overflow-hidden w-[270px]">
       <div className="relative">
-        <img
-          src={place.Thumb || place.Image || '/placeholder-image.jpg'}
-          alt={place.Title}
-          className="w-full h-32 object-cover"
-        />
+        <div className="w-full h-32 bg-[#006094] relative overflow-hidden">
+          {place.Image && (
+            <img
+              src={place.Image}
+              alt={place.Title}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
 
         <IconButton
           onClick={onClose}

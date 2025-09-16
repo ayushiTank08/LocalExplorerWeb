@@ -74,7 +74,7 @@ const Sidebar: React.FC = () => {
     <div className="flex items-start gap-2.5 self-stretch relative">
       <div
         ref={listRef}
-        className="w-full lg:w-[580px] max-w-full relative overflow-y-auto scrollbar-thin
+        className="w-full lg:w-[582px] max-w-full relative overflow-y-auto scrollbar-thin
                    grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6
                    h-[calc(100dvh-176px)] md:h-[calc(100vh-330px)]"
       >
@@ -95,19 +95,17 @@ const Sidebar: React.FC = () => {
           <>
             {places.map((p: Place, index: number) => (
               <div
-                key={p.Id ?? index}
+                key={p.Id}
                 id={`place-${p.Id}`}
                 onMouseEnter={() => dispatch(setHoveredPlace(p))}
                 onMouseLeave={() => dispatch(clearHoveredPlace())}
-                onClick={() => {
-                  router.push(`/pages/DetailsPage?id=${p.Id}`);
-                }}
-                className={`w-full cursor-pointer rounded-lg ${selectedPlace?.Id === p.Id ? "border-2 border-orange-500" : ""}`}
+                className={`w-full rounded-lg ${selectedPlace?.Id === p.Id ? "border-2 border-orange-500" : ""}`}
               >
                 <PlaceCard
+                  id={String(p.Id)}
                   title={p.Title}
                   address={getAddress(p)}
-                  imageUrl={p.Thumb || p.Image || '#006094'}
+                  imageUrl={p.Image || '#006094'}
                   facilities={getCategoryNames(p)}
                   hasTicket={true}
                   hasEvents={true}

@@ -65,7 +65,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({ isSearchActive = false }) => {
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
-
+    
     const category = categoryIcons.find(c => c.id === categoryId);
     if (!category) return;
 
@@ -86,7 +86,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({ isSearchActive = false }) => {
           dispatch(setSelectedTopCategoryId(node.CategoryId))
         );
       } else {
-        dispatch(setSelectedTopCategoryId(node.CategoryId));
+      dispatch(setSelectedTopCategoryId(node.CategoryId));
       }
     }
   };
@@ -134,7 +134,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({ isSearchActive = false }) => {
 
   return (
     <div className="w-full lg:py-2 bg-[var(--color-primary-lighter)]">
-      <div id="subheader-container" className="mx-0 lg:mx-6 lg:my-6 my-3 rounded-lg shadow-lg">
+      <div id="subheader-container" className="mx-0 lg:mx-6 lg:my-6 my-3 rounded-lg">
         <div className="lg:hidden flex flex-col space-y-3">
           {isSearchActive && (
             <div className="px-3">
@@ -178,7 +178,7 @@ const SubHeader: React.FC<SubHeaderProps> = ({ isSearchActive = false }) => {
           </div>
         </div>
 
-        <div className="hidden lg:flex items-center justify-between h-[88px] bg-[var(--color-primary)] rounded-lg">
+        <div className="hidden lg:flex items-center justify-between h-[88px] bg-[var(--color-primary)] rounded-lg max-w-[1440px] mx-auto ">
           <div className="flex flex-col mx-6 lg:flex-row items-stretch gap-4 w-full lg:w-auto">
             <div className="[&_.relative]:min-w-[200px] [&_.flex]:h-11 [&_.flex]:bg-[var(--color-background)]/80 [&_.flex]:text-gray-700 [&_.flex]:px-4 [&_.flex]:rounded-md [&_.flex]:border-0 [&_.flex]:focus:outline-none [&_.flex]:transition-all [&_.flex]:duration-200 [&_.flex]:cursor-pointer [&_.flex_.text-black]:text-gray-700 [&_.flex_.text-black]:font-medium [&_.flex_.font-body]:text-md [&_.flex_.font-normal]:font-medium [&_.flex_.bg-opacity-80]:bg-opacity-80">
               <Dropdown

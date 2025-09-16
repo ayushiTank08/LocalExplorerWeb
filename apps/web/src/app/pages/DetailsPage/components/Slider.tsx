@@ -32,11 +32,22 @@ export const Slider: React.FC<ImageGalleryProps> = React.memo(({
             className="w-full h-full focus:outline-none"
             aria-label="View full screen gallery"
           >
-            <img
-              src={images[currentImageIndex]}
-              alt="Gallery"
-              className="w-full h-full object-cover"
-            />
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-0">
+                <img
+                  src={images[currentImageIndex]}
+                  alt=""
+                  className="w-full h-full object-cover blur-md scale-105"
+                  aria-hidden="true"
+                />
+              </div>
+              <img
+                src={images[currentImageIndex]}
+                alt="Gallery"
+                className="relative max-w-full max-h-full object-contain"
+                style={{ maxWidth: '100%', maxHeight: '100%' }}
+              />
+            </div>
           </button>
         </div>
 
@@ -62,18 +73,18 @@ export const Slider: React.FC<ImageGalleryProps> = React.memo(({
         )}
 
         {images.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
             {images.map((_, i) => (
               <button
                 key={i}
-                className={`w-3 h-3 rounded-full transition-all ${i === currentImageIndex ? 'bg-[var(--color-primary)]' : 'bg-white/50'}`}
+                className={`w-2 h-2 rounded-full transition-all ${i === currentImageIndex ? 'bg-[var(--color-primary)]' : 'bg-white/50'}`}
                 onClick={() => onImageChange(i)}
               />
             ))}
           </div>
         )}
 
-        <Button 
+        {/* <Button 
           className="absolute bottom-3 right-4 bg-white/90 backdrop-blur-sm rounded px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white transition-colors"
           onClick={(e) => {
             e.stopPropagation();
@@ -81,7 +92,7 @@ export const Slider: React.FC<ImageGalleryProps> = React.memo(({
           }}
         >
           Show all (+{images.length})
-        </Button>
+        </Button> */}
       </div>
     </div>
   );
