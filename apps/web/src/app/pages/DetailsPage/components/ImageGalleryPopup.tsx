@@ -39,15 +39,29 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
 }) => {
   const activities = Array.isArray(propActivities) ? propActivities : [];
   const [isVisible, setIsVisible] = useState(false);
-  const [imageStatus, setImageStatus] = useState<Record<number, boolean>>({});
+  const [imageStatus, setImageStatus] = useState<Record<number, 'loading' | 'loaded' | 'error'>>({});
 
   useEffect(() => {
-    const status: Record<number, boolean> = {};
+    const status: Record<number, 'loading' | 'loaded' | 'error'> = {};
     activities.forEach(activity => {
-      status[activity.Id] = true;
+      status[activity.Id] = 'loading';
     });
     setImageStatus(status);
   }, [activities]);
+
+  const handleImageLoad = (id: number) => {
+    setImageStatus(prev => ({
+      ...prev,
+      [id]: 'loaded'
+    }));
+  };
+
+  const handleImageError = (id: number) => {
+    setImageStatus(prev => ({
+      ...prev,
+      [id]: 'error'
+    }));
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -98,13 +112,15 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {activities.map((activity) => {
+                const isLoading = imageStatus[activity.Id] === 'loading';
+                const hasError = imageStatus[activity.Id] === 'error';
+                const isLoaded = imageStatus[activity.Id] === 'loaded';
+                
                 const decryptedActivity = {
                   ...activity,
                   FirstName: activity.FirstName ? decryptData(activity.FirstName) : 'User',
                   LastName: activity.LastName ? decryptData(activity.LastName) : '',
                 };
-                
-                const isImageValid = imageStatus[activity.Id] ?? true; // Default to true to show loading state
                 
                 return (
                   <div
@@ -112,28 +128,31 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
                     className="relative rounded-md overflow-hidden shadow-sm bg-white"
                   >
                     <div className="aspect-square overflow-hidden relative bg-gray-100">
-                      {activity.PhotoURL ? (
-                        <img
-                          src={activity.PhotoURL}
-                          alt={`Posted by ${decryptedActivity.FirstName} ${decryptedActivity.LastName}`}
-                          className="w-full h-full object-cover transition-transform duration-300"
-                          onError={(e) => {
-                            console.error('Error loading image:', activity.PhotoURL);
-                            const target = e.target as HTMLImageElement;
-                            target.onerror = null;
-                            target.src = '/assets/images/placeholder.jpg';
-                            setImageStatus(prev => ({ ...prev, [activity.Id]: false }));
-                          }}
-                          onLoad={() => {
-                            setImageStatus(prev => ({ ...prev, [activity.Id]: true }));
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <span className="text-gray-500 text-sm">No image URL provided</span>
+                      {isLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="animate-pulse w-full h-full bg-gray-200"></div>
                         </div>
                       )}
-                      {process.env.NODE_ENV === 'development' && (
+                      {hasError ? (
+                        <div className="w-full h-full flex items-center justify-center bg-red-50">
+                          <span className="text-red-500 text-sm">Failed to load</span>
+                        </div>
+                      ) : activity.PhotoURL ? (
+                        <img
+                          src={activity.PhotoURL}
+                          alt={`Gallery image ${activity.Id}`}
+                          className={`w-full h-full object-cover transition-opacity duration-300 ${
+                            isLoaded ? 'opacity-100' : 'opacity-0'
+                          }`}
+                          onLoad={() => handleImageLoad(activity.Id)}
+                          onError={() => handleImageError(activity.Id)}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <span className="text-gray-400">No image</span>
+                        </div>
+                      )}
+                                            {process.env.NODE_ENV === 'development' && (
                         <div className="absolute bottom-0 left-0 right-0 bg-white/80 text-[13px] p-2 truncate">
                           <span className="text-[#000000]/70">Posted by:</span>{' '}
                           <span className="text-[var(--color-secondary)] font-bold">

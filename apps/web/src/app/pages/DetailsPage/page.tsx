@@ -16,6 +16,7 @@ import { passes, events, deals, reviews } from './detailsPageData';
 import { selectCoupons, selectDeals, selectDealsAndCouponsLoading, selectDealsAndCouponsError } from '../../../store/slices/locationDetailsSlice';
 import { ImageGalleryPopup } from './components/ImageGalleryPopup';
 import { Button } from "@nextforge/ui";
+import { decryptData } from "@/utils/encryption";
 
 const Slider = dynamic(() => import('./components/Slider').then(mod => mod.Slider), { ssr: false });
 const StaticMap = dynamic(() => import('./components/StaticMap').then(mod => mod.default), { ssr: false });
@@ -38,8 +39,16 @@ function DetailsContent() {
     if (locationDetails?.Activities) {
       return locationDetails.Activities;
     }
-    return currentPlace?.Activities || [];
+    if (currentPlace?.Activities) {
+      return currentPlace.Activities;
+    }
+    return [];
   }, [locationDetails, currentPlace]);
+  
+  const currentPlaceFromUrl = useMemo(() => {
+    if (!id || !places?.length) return null;
+    return places.find(p => p.Id.toString() === id) || null;
+  }, [id, places]);
 
   useEffect(() => {
   }, [id, places, currentPlace]);
@@ -67,55 +76,52 @@ function DetailsContent() {
     { icon: "/assets/Location_Details_Logos/Pin.svg", alt: "Pin" },
   ];
 
-  const fetchPlaceById = useCallback(async (placeId: string) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/places/${placeId}`);
-      if (response.ok) {
-        const data = await response.json();
-        dispatch(setSelectedPlace(data));
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch place:', errorText);
-        dispatch(setSelectedPlace(null));
-      }
-    } catch (error) {
-      console.error('Error fetching place:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dispatch]);
-
-  const foundPlace = useMemo(() => {
-    if (!id || places.length === 0) return null;
-    return places.find(p => p.Id.toString() === id) || null;
-  }, [id, places]);
+  const locationId = useMemo(() => id ? parseInt(id) : null, [id]);
 
   useEffect(() => {
-    if (id && places && places.length > 0) {
-      const foundPlace = places.find(p => p.Id === parseInt(id));
-      if (foundPlace) {
-        dispatch(setSelectedPlace(foundPlace));
-        setIsLoading(false);
-        if (foundPlace.Id) {
-          dispatch(fetchLocationDetails({ 
-            locationId: foundPlace.Id, 
-            customerId: 5588
-          })).unwrap().then((data) => {
-            // Update stamped state when location details are loaded
-            setStamped(data?.Stamped || false);
-          });
-          
-          dispatch(fetchDealsAndCoupons({ 
-            locationId: foundPlace.Id, 
-            customerId: 5588 
-          }));
+    const fetchData = async () => {
+      if (!locationId) return;
+      
+      try {
+        setIsLoading(true);
+        
+        if (currentPlaceFromUrl) {
+          dispatch(setSelectedPlace(currentPlaceFromUrl));
         }
-      } else {
+
+        await Promise.all([
+          dispatch(fetchLocationDetails({ 
+            locationId, 
+            customerId: 5588 
+          })).unwrap().then((data) => {
+            console.log('Location details loaded:', {
+              hasLatLng: !!(data?.Latitude && data?.Longitude),
+              data: data
+            });
+            setStamped(data?.Stamped || false);
+          }),
+          dispatch(fetchDealsAndCoupons({ 
+            locationId, 
+            customerId: 5588 
+          }))
+        ]);
+        
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
         setIsLoading(false);
       }
-    }
-  }, [id, places, currentPlace, dispatch]);
+    };
+    
+    fetchData();
+    
+    return () => {
+      dispatch(setSelectedPlace(null));
+    };
+  }, [locationId, dispatch, currentPlaceFromUrl]);
+  
+  useEffect(() => {
+  }, [locationDetails]);
 
   useEffect(() => {
     return () => {
@@ -123,7 +129,15 @@ function DetailsContent() {
     };
   }, [dispatch]);
 
-  const getCategoryNames = useCallback((place: Place): string[] => {
+  interface PlaceWithCategory extends Partial<Omit<Place, 'Category'>> {
+    Category?: string | number;
+    Address?: string;
+    City?: string;
+    State?: string;
+    ZipCode?: string;
+  }
+
+  const getCategoryNames = useCallback((place: PlaceWithCategory): string[] => {
     if (!place?.Category || !categories) return [];
 
     const nameById = new Map<number, string>();
@@ -145,14 +159,16 @@ function DetailsContent() {
     return ids.map((id) => nameById.get(id)).filter(Boolean) as string[];
   }, [categories]);
 
-  const getFullAddress = useCallback((place: Place | null): string => {
+  const getFullAddress = useCallback((place: PlaceWithCategory | null): string => {
     if (!place) return '';
     const parts = [place.Address, place.City, place.State, place.ZipCode].filter(Boolean);
     return parts.join(', ');
   }, []);
 
   const { images, categoryNames, fullAddress } = useMemo(() => {
-    if (!currentPlace) {
+    const place = currentPlace || locationDetails;
+    
+    if (!place) {
       return {
         images: ['/assets/placeholder_hero.jpg'],
         categoryNames: [] as string[],
@@ -162,14 +178,14 @@ function DetailsContent() {
 
     return {
       images: [
-        currentPlace.Image || '/assets/placeholder_hero.jpg',
+        place.Image || '/assets/placeholder_hero.jpg',
         '/assets/placeholder_hero.jpg',
         '/assets/placeholder_hero.jpg',
       ],
-      categoryNames: getCategoryNames(currentPlace),
-      fullAddress: getFullAddress(currentPlace)
+      categoryNames: getCategoryNames(place),
+      fullAddress: getFullAddress(place)
     };
-  }, [currentPlace, getCategoryNames, getFullAddress]);
+  }, [currentPlace, locationDetails, getCategoryNames, getFullAddress]);
 
   const handlePrevImage = useCallback(() => {
     setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
@@ -191,7 +207,9 @@ function DetailsContent() {
     );
   }
 
-  if (!currentPlace) {
+  const placeToRender = currentPlace || locationDetails;
+  
+  if (!placeToRender) {
     return <NotFoundState />;
   }
 
@@ -212,16 +230,21 @@ function DetailsContent() {
                   }}
                 />
               )}
-              {activities?.length > 0 && (
+              {activities?.length > 3 && (
                 <div className="absolute bottom-4 right-4 z-10">
-                  <Button 
-                    className="bg-white/90 backdrop-blur-sm rounded px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white transition-colors"
+                  <Button
+                    className="bg-white/90 backdrop-blur-sm rounded px-4 py-2 text-sm font-medium text-gray-700 hover:bg-white transition-colors cursor-pointer"
                     onClick={() => {
                       const validActivities = activities.filter(act => !!act.PhotoURL?.trim());
                       setIsGalleryOpen(true);
                     }}
                   >
-                    Show all ({activities.filter(act => !!act.PhotoURL?.trim()).length})
+                    {(() => {
+                      const total = activities.filter(act => !!act.PhotoURL?.trim()).length;
+                      return total > 3
+                        ? `Show all (+${total - 3})`
+                        : `Show all (${total})`;
+                    })()}
                   </Button>
                 </div>
               )}
@@ -344,7 +367,7 @@ function DetailsContent() {
                   <div id="events">
                     <h3 className="text-2xl font-semibold text-gray-900 mb-4">Events</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {locationDetails.Events.map((event: any) => {
+                       {locationDetails.Events.slice(0, 6).map((event: any) => {
                         const eventDate = new Date(event.EventDate);
                         const formattedDate = eventDate.toLocaleDateString('en-US', {
                           month: 'long',
@@ -407,7 +430,7 @@ function DetailsContent() {
                                   dangerouslySetInnerHTML={{ 
                                     __html: event.Description
                                       .replace(/<[^>]*>/g, '')
-                                      .substring(0, 150) + (event.Description.length > 150 ? '...' : '')
+                                      .substring(0, 70) + (event.Description.length > 70 ? '...' : '')
                                   }} 
                                 />
                               )}
@@ -648,100 +671,151 @@ function DetailsContent() {
                 <div className="border-t border-gray-200 my-8"></div>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">What people say</h3>
 
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="flex -space-x-2">
-                    {[
-                      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-                      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-                      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-                      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face",
-                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=40&h=40&fit=crop&crop=face"
-                    ].map((avatar, index) => (
-                      <div key={index} className="w-10 h-10 rounded-full border-2 border-white overflow-hidden">
-                        <img src={avatar} alt="User" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">Loved by 100+ customers</div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {reviews.map((post, index) => (
-                    <div
-                      key={index}
-                      className="w-full bg-white border rounded-lg p-4"
-                      style={{ borderColor: "#E7EAEC" }}
-                    >
-                      <div className="flex justify-between gap-4">
-                        <div className="flex-1 pr-2">
-                          <p className="text-sm text-gray-700">
-                            has checked in at{" "}
-                            <span className="text-[var(--color-secondary)] font-medium">{post.location}</span>{" "}
-                            <span className="text-gray-500 text-xs">{post.time}</span>{" "}
-                          </p>
-                          <p className="mt-2 text-gray-800 text-sm">{post.content}</p>
-                        </div>
-
-                        {post.hasImage && (
-                          <div className="w-24 h-24 flex-shrink-0 rounded-md overflow-hidden">
-                            <img
-                              src={post.image}
-                              alt="Post"
-                              className="w-full h-full object-cover"
-                            />
+                {activities?.length > 0 && (
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex -space-x-2">
+                      {activities
+                        .filter(act => act.Comment?.trim())
+                        .slice(0, 5)
+                        .map((activity, index) => (
+                          <div
+                            key={index}
+                            className="w-9 h-9 rounded-full border-2 border-white overflow-hidden bg-gray-200"
+                          >
+                            {activity.Profile ? (
+                              <img
+                                src={activity.Profile}
+                                alt="User"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600 text-sm">
+                                {(activity.FirstName?.[0] || "U").toUpperCase()}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-3 text-gray-500 text-sm">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center gap-1 hover:text-[var(--color-primary)] p-1 h-auto"
-                        >
-                          <img src="/assets/Icons/Like.svg" alt="Like" className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center gap-1 hover:text-[var(--color-primary)]"
-                        >
-                          <img src="/assets/Icons/Comment.svg" alt="Comment" className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex items-center gap-1 hover:text-[var(--color-primary)]"
-                        >
-                          <img src="/assets/Icons/Red-flag.svg" alt="Flag" className="w-4 h-4" />
-                        </Button>
-                        <input
-                          type="text"
-                          placeholder="Add a comment ..."
-                          className="flex-1 border-b border-gray-300 text-sm px-2 py-1 
-                          focus:outline-none focus:border-[var(--color-primary)] 
-                          hover:border-gray-400 hover:bg-gray-50 transition"
-                        />
-                      </div>
+                        ))}
                     </div>
-                  ))}
+                    <p className="text-sm text-gray-600">
+                      Loved by <span className="font-semibold">100+</span> customers
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-4">
+                  {activities
+                    .filter(
+                      activity =>
+                        activity.Comment?.trim() &&
+                        activity.Comment.toLowerCase() !== "giveaway"
+                    )
+                    .slice(0, 5)
+                    .map(activity => {
+                      const formattedDate = activity.CreatedDate
+                        ? new Date(activity.CreatedDate * 1000).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                        : "";
+
+                      const decryptedFirstName = activity.FirstName
+                        ? decryptData(activity.FirstName)
+                        : "User";
+                      const decryptedLastName = activity.LastName
+                        ? decryptData(activity.LastName)
+                        : "";
+
+                      return (
+                        <div
+                          key={activity.Id}
+                          className="w-full bg-white border rounded-lg p-4 flex flex-col md:flex-row gap-4"
+                          style={{ borderColor: "#E7EAEC" }}
+                        >
+                          <div className="flex-1 flex flex-col">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-600">
+                                {decryptedFirstName?.[0]?.toUpperCase() || "U"}
+                              </div>
+                              <p className="text-sm text-gray-700">
+                                <span className="font-medium text-gray-900">
+                                  {decryptedFirstName} {decryptedLastName}
+                                </span>{" "}
+                                has checked in at{" "}
+                                <span className="text-[var(--color-secondary)] font-medium cursor-pointer">
+                                  Lake Oklahoma RV Park
+                                </span>
+                              </p>
+                            </div>
+
+                            {activity.PhotoURL && (
+                              <div className="mt-3 md:hidden">
+                                <img
+                                  src={activity.PhotoURL}
+                                  alt="User post"
+                                  className="w-full h-48 object-cover"
+                                />
+                              </div>
+                            )}
+
+                            <div className="mt-2 text-gray-800 text-sm md:ml-12">
+                              {activity.Comment}
+                            </div>
+
+                            <div className="mt-4 flex items-center gap-6 text-gray-500 text-sm flex-wrap md:ml-12">
+                              <button className="flex items-center gap-2 hover:text-[var(--color-primary)] relative cursor-pointer">
+                                <img src="/assets/Icons/Like.svg" alt="Like" className="w-6 h-6" />
+                                {/* <span className="absolute -top-2 -right-2 bg-[var(--color-primary)] text-white text-[10px] font-semibold px-2 py-1 rounded-full">{activity.LikeCount}</span> */}
+                              </button>
+                              <button className="flex items-center gap-2 hover:text-[var(--color-primary)] relative cursor-pointer">
+                                <img src="/assets/Icons/Comment.svg" alt="Comment" className="w-6 h-6" />
+                                <span className="absolute -top-2 -right-2 bg-[var(--color-primary)] text-white text-[10px] font-semibold px-2 py-1 rounded-full">{activity.CommentCount}</span>
+                              </button>
+                              <button className="flex items-center gap-2 hover:text-[var(--color-primary)] cursor-pointer">
+                                <img src="/assets/Icons/Red-flag.svg" alt="Flag" className="w-4 h-4" />
+                              </button>
+                              <input
+                                type="text"
+                                placeholder="Add a comment ..."
+                                className="flex-1 rounded px-3 py-1 text-sm
+                                  border border-transparent
+                                  hover:border-gray-300
+                                  focus:border-gray-300
+                                  focus:ring-1 focus:ring-gray-300
+                                  transition-colors"
+                              />
+                            </div>
+                          </div>
+                          {activity.PhotoURL && (
+                            <div className="hidden md:block w-40 flex-shrink-0">
+                              <img
+                                src={activity.PhotoURL}
+                                alt="User post"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                  {activities.filter(
+                    act => act.Comment?.trim() && act.Comment.toLowerCase() !== "giveaway"
+                  ).length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        No comments yet. Be the first to share your experience!
+                      </div>
+                    )}
                 </div>
 
                 <div className="mt-8 flex justify-center">
                   <Button
-                    variant="outline"
                     onClick={() => {
-                      const validActivities = activities.filter(act => {
-                        const hasPhoto = !!act.PhotoURL?.trim();
-                        return hasPhoto;
-                      });
                       setIsGalleryOpen(true);
                     }}
                     className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
                   >
-                    {`Show all (+23)`}
+                    Show all (+23)
                   </Button>
                 </div>
 
@@ -762,19 +836,38 @@ function DetailsContent() {
               <div className="w-full h-full bg-gray-200 rounded-lg relative">
                 <div className="space-y-6">
                   <div className="h-full">
-                    {currentPlace?.Latitude && currentPlace?.Longitude ? (
-                      <StaticMap
-                        latitude={currentPlace.Latitude}
-                        longitude={currentPlace.Longitude}
-                        zoom={14}
-                        className="w-full h-full"
-                        markerColor="#C25128"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-500">Location not available</span>
-                      </div>
-                    )}
+                    {(() => {
+                      const lat = currentPlace?.Latitude || 
+                                locationDetails?.Latitude || 
+                                locationDetails?.locationLatitude ||
+                                locationDetails?.location?.Latitude;
+                      
+                      const lng = currentPlace?.Longitude || 
+                                locationDetails?.Longitude || 
+                                locationDetails?.locationLongitude ||
+                                locationDetails?.location?.Longitude;
+                                            
+                      if (lat && lng) {
+                        return (
+                          <div className="w-full h-[300px] rounded-lg">
+                            <StaticMap
+                              latitude={lat}
+                              longitude={lng}
+                              zoom={14}
+                            />
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="h-[300px] bg-gray-100 flex items-center justify-center rounded-lg">
+                          <div className="text-center">
+                            <p className="text-gray-500">Map not available</p>
+                            <p className="text-xs text-gray-400 mt-1">No coordinates found for this location</p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -851,6 +944,7 @@ function DetailsContent() {
             <div className="rounded-lg">
               {locationDetails?.Features && locationDetails.Features.length > 0 && (
                 <>
+                <div className="border-t border-gray-300 my-4"></div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Highlights</h3>
                   <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-gray-700">
                     {locationDetails.Features.map((feature: string, idx: number) => (

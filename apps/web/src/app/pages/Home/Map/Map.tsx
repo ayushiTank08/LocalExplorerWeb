@@ -642,7 +642,9 @@ const Map: React.FC = () => {
           </div>
         </div>
       )}
-      <CategoryPanel />
+      <div className="absolute top-4 right-4 z-20">
+        <CategoryPanel />
+      </div>
       <div ref={mapContainerRef} className="w-full h-full" />
     </div>
   );
