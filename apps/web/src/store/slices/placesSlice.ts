@@ -165,7 +165,7 @@ export const fetchDefaultLocation = createAsyncThunk(
   'places/fetchDefaultLocation',
   async () => {
     const response = await apiRequest<{ Data: DefaultLocation }>({
-      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getDefaultLocation',
+      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getDefaultLocation',
       method: 'PUT',
       params: {
         appName: 'MC',
@@ -191,7 +191,7 @@ export const fetchCategories = createAsyncThunk(
       FilterType: params?.filterType ?? 1,
     };
     const response = await apiRequest<{ Data: CategoryNode[] }>({
-      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getmastercategorygrouplocationsummary',
+      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getmastercategorygrouplocationsummary',
       method: 'PUT',
       body: payload
     });
@@ -246,7 +246,7 @@ export const fetchRegions = createAsyncThunk(
     };
 
     const response = await apiRequest<{ Data: { List: Region[] } }>({
-      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getcustomerregions',
+      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getcustomerregions',
       method: 'PUT',
       body: payload
     });
@@ -290,7 +290,7 @@ export const fetchPlaces = createAsyncThunk(
     };
 
     const response = await apiRequest<{ Data: { List: Place[] } }>({
-      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getlocations',
+      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getlocations',
       method: 'PUT',
       body: payload
     });
