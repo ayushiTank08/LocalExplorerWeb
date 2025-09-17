@@ -121,7 +121,7 @@ export const fetchLocationDetails = createAsyncThunk<
   async ({ locationId, customerId }, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: LocationDetails }>({
-        url: 'https://tsunamiapiv4.localexplorers.com/api/Content/v4/getlocationdata',
+        url: 'http://tsunamistagingv2api.azurewebsites.net/api/Content/v4/getlocationdata',
         method: 'PUT',
         body: {
           locationid: locationId,
@@ -157,7 +157,7 @@ export const fetchPasses = createAsyncThunk<
   async (params, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: Pass[] }>({
-        url: 'https://tsunamiapiv4.localexplorers.com/api/passes/GetPassList',
+        url: 'http://tsunamistagingv2api.azurewebsites.net/api/passes/GetPassList',
         method: 'PUT',
         body: {
           LocationId: params.locationId,
@@ -195,7 +195,7 @@ export const fetchPassDetails = createAsyncThunk<
   async (params, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: Pass }>({
-        url: 'https://tsunamiapiv4.localexplorers.com/api/passes/GetPassDetails',
+        url: 'http://tsunamistagingv2api.azurewebsites.net/api/passes/GetPassDetails',
         method: 'PUT',
         body: {
           PassId: params.passId,
@@ -227,7 +227,7 @@ export const fetchUserPasses = createAsyncThunk<
   async (params, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: any[] }>({
-        url: 'https://tsunamiapiv4.localexplorers.com/api/passes/GetUserPassPurchaseInfo',
+        url: 'http://tsunamistagingv2api.azurewebsites.net/api/passes/GetUserPassPurchaseInfo',
         method: 'PUT',
         body: {
           CustomerId: params.customerId,
@@ -271,7 +271,7 @@ export const fetchDealsAndCoupons = createAsyncThunk<
   'locationDetails/fetchDealsAndCoupons',
   async ({ locationId, customerId }, { rejectWithValue }) => {
     try {
-      const url = 'https://tsunamiapiv4.localexplorers.com/api/Content/v4/getdealsandcouponlist';
+      const url = 'http://tsunamistagingv2api.azurewebsites.net/api/Content/v4/getdealsandcouponlist';
       const requestBody = {
         customerId,
         contactId: 0,

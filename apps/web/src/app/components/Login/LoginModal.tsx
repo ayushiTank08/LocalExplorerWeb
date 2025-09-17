@@ -84,7 +84,7 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
       let response;
       try {
         response = await apiRequest<LoginResponse>({
-        url: 'https://tsunamiapiv4.localexplorers.com/api/Common/Login',
+        url: 'http://tsunamistagingv2api.azurewebsites.net/api/Common/Login',
         method: 'PUT',
         body: {
           customerId: 5588,

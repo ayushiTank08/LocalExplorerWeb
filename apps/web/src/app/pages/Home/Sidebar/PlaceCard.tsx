@@ -137,8 +137,9 @@ const PlaceCard: React.FC<LocationCardProps> = ({
 
       <div className="flex px-3 py-2 flex-col items-start gap-2 self-stretch relative">
         <div
-          className="self-stretch text-text-neutral-dark font-body text-[15px] font-bold leading-[120%] truncate"
+          className="self-stretch text-text-neutral-dark font-body text-[15px] font-bold leading-[120%] truncate cursor-pointer"
           title={title}
+          onClick={handleSeeMore}
         >
           {title}
         </div>
