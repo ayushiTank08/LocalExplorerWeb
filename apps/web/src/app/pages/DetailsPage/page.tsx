@@ -54,6 +54,7 @@ function DetailsContent() {
   }, [id, places, currentPlace]);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [areImagesLoaded, setAreImagesLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [stamped, setStamped] = useState<boolean>(locationDetails?.Stamped || false);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -166,7 +167,7 @@ function DetailsContent() {
   }, []);
 
   const { images, categoryNames, fullAddress } = useMemo(() => {
-    const place = currentPlace || locationDetails;
+    const place = locationDetails || currentPlace;
     
     if (!place) {
       return {
@@ -176,16 +177,16 @@ function DetailsContent() {
       };
     }
 
+    const locationImages = (locationDetails?.Images && locationDetails.Images.length > 0) 
+      ? locationDetails.Images 
+      : [place.Image || '/assets/placeholder_hero.jpg'];
+
     return {
-      images: [
-        place.Image || '/assets/placeholder_hero.jpg',
-        '/assets/placeholder_hero.jpg',
-        '/assets/placeholder_hero.jpg',
-      ],
+      images: locationImages,
       categoryNames: getCategoryNames(place),
       fullAddress: getFullAddress(place)
     };
-  }, [currentPlace, locationDetails, getCategoryNames, getFullAddress]);
+  }, [locationDetails, currentPlace, getCategoryNames, getFullAddress]);
 
   const handlePrevImage = useCallback(() => {
     setCurrentImageIndex(prev => (prev > 0 ? prev - 1 : images.length - 1));
@@ -207,7 +208,7 @@ function DetailsContent() {
     );
   }
 
-  const placeToRender = currentPlace || locationDetails;
+  const placeToRender = locationDetails || currentPlace;
   
   if (!placeToRender) {
     return <NotFoundState />;
@@ -217,9 +218,9 @@ function DetailsContent() {
     <div className="min-h-screen max-w-[1440px] flex justify-center mx-auto">
       <div className="mx-auto py-6 px-6 lg:px-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className={`lg:col-span-2 ${currentPlace?.Image ? 'space-y-6' : 'space-y-0'}`}>
+          <div className={`lg:col-span-2 ${(placeToRender?.Image || (locationDetails?.Images && locationDetails.Images.length > 0)) ? 'space-y-6' : 'space-y-0'}`}>
             <div className="relative">
-              {currentPlace?.Image && (
+              {(placeToRender?.Image || (locationDetails?.Images && locationDetails.Images.length > 0)) && (
                 <Slider
                   images={images}
                   currentImageIndex={currentImageIndex}
@@ -471,14 +472,14 @@ function DetailsContent() {
 
               <div id="passes">
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">Passes</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-29">
                   {passes.map((pass, index) => (
                     <div
                       key={index}
-                      className="flex rounded-lg overflow-hidden relative min-h-[128px]"
+                      className="flex rounded-lg overflow-hidden relative min-h-[128px] max-w-[385px]"
                     >
                       <div
-                        className={`w-15 flex items-center justify-center font-bold text-xl ${pass.textColor} ${pass.bgLight}`}
+                        className={`w-15 flex items-center shadow-xl justify-center font-bold text-xl ${pass.textColor} ${pass.bgLight}`}
                         style={{
                           writingMode: "vertical-rl",
                           textOrientation: "mixed",
@@ -517,7 +518,7 @@ function DetailsContent() {
                         <div className="flex justify-center py-2 w-full">
                           <div className="relative w-full">
                             <div
-                              className={`absolute bottom-0 right-0 w-[60%] text-white font-bold text-xl ${pass.bgColor} rounded-l-full px-6 py-1`}
+                              className={`absolute bottom-0 right-0 w-[69%] text-white font-bold text-xl ${pass.bgColor} rounded-l-full px-6 py-1`}
                             >
                               {pass.price}
                             </div>
@@ -533,7 +534,7 @@ function DetailsContent() {
                     variant="ghost"
                     className="text-[var(--color-primary)] font-medium hover:underline flex items-center gap-2 mx-auto cursor-pointer p-0 h-auto"
                   >
-                    View all
+                    View More Passes
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -591,7 +592,7 @@ function DetailsContent() {
                     variant="ghost"
                     className="text-[var(--color-primary)] font-medium hover:underline flex items-center gap-2 mx-auto cursor-pointer p-0 h-auto"
                   >
-                    View all
+                    View More Deals
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -613,21 +614,26 @@ function DetailsContent() {
                       <div key={coupon.Id} className="rounded-lg overflow-hidden">
                         <div className="bg-[#F6E1B7] min-h-[130px] relative p-1">
                           <div className="border border-dashed border-[var(--color-secondary)] rounded p-5.5 text-center">
-                            <h4 className="text-xl font-bold text-[var(--color-secondary)]">
-                              {coupon.Title}
-                            </h4>
-                            <p className="text-sm text-[var(--color-secondary)] mt-2">{coupon.Description}</p>
-
-                            {/* {coupon.Logo && (
+                            {/* {coupon.Logo ? (
                               <div className="mt-2">
-                                <img 
-                                  src={coupon.Logo} 
-                                  alt={coupon.Title} 
-                                  className="h-12 mx-auto object-contain"
+                                <img
+                                  src={coupon.Logo}
+                                  alt={coupon.Title}
+                                  className="mx-auto object-contain  w-40 h-40"
                                 />
                               </div>
+                            ) : (
+                              <h4 className="text-xl font-bold text-[var(--color-secondary)]">
+                                {coupon.Title}
+                              </h4>
                             )} */}
-
+                              <h4 className="text-xl font-bold text-[var(--color-secondary)]">
+                                {coupon.Title}
+                              </h4>
+                            <div
+                              className="text-sm text-[var(--color-secondary)] mt-2"
+                              dangerouslySetInnerHTML={{ __html: coupon.Description ?? "" }}
+                            />
                             <div className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full flex items-center justify-center">
                               <img src="/assets/Icons/Scissors.svg" alt="Coupon" className="w-6 h-6" />
                             </div>
@@ -808,23 +814,24 @@ function DetailsContent() {
                     )}
                 </div>
 
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    onClick={() => {
-                      setIsGalleryOpen(true);
-                    }}
-                    className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
-                  >
-                    Show all (+23)
-                  </Button>
-                </div>
+                {activities.filter(
+                  activity => activity.Comment?.trim() && activity.Comment.toLowerCase() !== "giveaway"
+                ).length > 0 && (
+                  <div className="mt-8 flex justify-center">
+                    <Button
+                      className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
+                    >
+                      Show all ({activities.filter(act => act.Comment?.trim() && act.Comment.toLowerCase() !== "giveaway").length})
+                    </Button>
+                  </div>
+                )}
 
                 {isGalleryOpen && (
                   <ImageGalleryPopup
                     isOpen={isGalleryOpen}
                     onClose={() => setIsGalleryOpen(false)}
                     activities={activities.filter(act => act.PhotoURL?.trim())}
-                    locationName={currentPlace?.Title || locationDetails?.Title || 'Location'}
+                    locationName={placeToRender?.Title || 'Location'}
                   />
                 )}
               </div>
@@ -837,15 +844,15 @@ function DetailsContent() {
                 <div className="space-y-6">
                   <div className="h-full">
                     {(() => {
-                      const lat = currentPlace?.Latitude || 
-                                locationDetails?.Latitude || 
+                      const lat = locationDetails?.Latitude || 
                                 locationDetails?.locationLatitude ||
-                                locationDetails?.location?.Latitude;
+                                locationDetails?.location?.Latitude ||
+                                currentPlace?.Latitude;
                       
-                      const lng = currentPlace?.Longitude || 
-                                locationDetails?.Longitude || 
+                      const lng = locationDetails?.Longitude || 
                                 locationDetails?.locationLongitude ||
-                                locationDetails?.location?.Longitude;
+                                locationDetails?.location?.Longitude ||
+                                currentPlace?.Longitude;
                                             
                       if (lat && lng) {
                         return (
@@ -879,7 +886,7 @@ function DetailsContent() {
             </div>
 
             <div className="rounded-lg space-y-3 text-sm text-gray-700">
-              {currentPlace?.Address && (
+              {placeToRender?.Address && (
                 <div>
                   <div className="flex items-center gap-2">
                     <img
@@ -890,28 +897,28 @@ function DetailsContent() {
                     <span className="font-medium">Address:</span>
                   </div>
                   <p className="text-gray-700 pl-7">
-                    {[currentPlace.Address, currentPlace.City, currentPlace.State, currentPlace.ZipCode].filter(Boolean).join(', ')}
+                    {[placeToRender.Address, placeToRender.City, placeToRender.State, placeToRender.ZipCode].filter(Boolean).join(', ')}
                   </p>
                 </div>
               )}
-              {currentPlace?.Phone && (
+              {placeToRender?.Phone && (
                 <div className="flex items-center gap-2">
                   <img src="/assets/Icons/Call.svg" alt="Call" className="w-5 h-5 text-blue-600" />
-                  <a href={`tel:${currentPlace.Phone.replace(/[^0-9+]/g, '')}`} className="hover:underline">
-                    {currentPlace.Phone}
+                  <a href={`tel:${placeToRender.Phone.replace(/[^0-9+]/g, '')}`} className="hover:underline">
+                    {placeToRender.Phone}
                   </a>
                 </div>
               )}
-              {currentPlace?.WebSite && (
+              {placeToRender?.WebSite && (
                 <div className="flex items-center gap-2">
                   <img src="/assets/Icons/World.svg" alt="Website" className="w-5 h-5 text-blue-600" />
                   <a
-                    href={currentPlace.WebSite.startsWith('http') ? currentPlace.WebSite : `https://${currentPlace.WebSite}`}
+                    href={placeToRender.WebSite.startsWith('http') ? placeToRender.WebSite : `https://${placeToRender.WebSite}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline break-all"
                   >
-                    {currentPlace.WebSite.replace(/^https?:\/\//, '')}
+                    {placeToRender.WebSite.replace(/^https?:\/\//, '')}
                   </a>
                 </div>
               )}
@@ -964,7 +971,7 @@ function DetailsContent() {
               <div className="rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Local Weather</h3>
                 <div className="bg-[var(--color-border-primary)] rounded-lg p-5 text-white space-y-2">
-                  <WeatherWidget location={currentPlace?.City || 'Ocala'} />
+                  <WeatherWidget location={placeToRender?.City || 'Ocala'} />
                 </div>
               </div>
             </div>

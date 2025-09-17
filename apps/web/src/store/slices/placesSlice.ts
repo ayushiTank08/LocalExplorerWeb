@@ -39,6 +39,7 @@ export interface Place {
   Tags: any[];
   IsProductionOnly: boolean | null;
   Image: string | null;
+  Images?: string[];
   Features: any[];
   CustomHours?: string;
   Activities?: Array<{
@@ -164,7 +165,7 @@ export const fetchDefaultLocation = createAsyncThunk(
   'places/fetchDefaultLocation',
   async () => {
     const response = await apiRequest<{ Data: DefaultLocation }>({
-      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getDefaultLocation',
+      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getDefaultLocation',
       method: 'PUT',
       params: {
         appName: 'MC',
@@ -190,7 +191,7 @@ export const fetchCategories = createAsyncThunk(
       FilterType: params?.filterType ?? 1,
     };
     const response = await apiRequest<{ Data: CategoryNode[] }>({
-      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getmastercategorygrouplocationsummary',
+      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getmastercategorygrouplocationsummary',
       method: 'PUT',
       body: payload
     });
@@ -245,7 +246,7 @@ export const fetchRegions = createAsyncThunk(
     };
 
     const response = await apiRequest<{ Data: { List: Region[] } }>({
-      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getcustomerregions',
+      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getcustomerregions',
       method: 'PUT',
       body: payload
     });
@@ -289,7 +290,7 @@ export const fetchPlaces = createAsyncThunk(
     };
 
     const response = await apiRequest<{ Data: { List: Place[] } }>({
-      url: 'https://tsunamiapiv4.localexplorers.com/api/content/v4/getlocations',
+      url: 'http://tsunamistagingv2api.azurewebsites.net/api/content/v4/getlocations',
       method: 'PUT',
       body: payload
     });

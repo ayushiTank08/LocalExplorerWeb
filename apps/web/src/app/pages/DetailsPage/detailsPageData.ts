@@ -13,16 +13,16 @@ export const passes = [
     name: "1 Day Wine Tasting Pass",
     price: "$50.00",
     textColor: "text-[#874E4E]",
-    bgColor: "bg-[#874E4E]",
-    bgLight: "bg-[#874E4E]/20",
+    bgColor: "bg-[#874E4E]/80",
+    bgLight: "bg-[#F9F5F5]",
   },
   {
     duration: "2-DAYS",
     name: "2 Day Wine Tasting Pass",
     price: "$99.00",
     textColor: "text-[#71874E]",
-    bgColor: "bg-[#71874E]",
-    bgLight: "bg-[#71874E]/20",
+    bgColor: "bg-[#71874E]/80",
+    bgLight: "bg-[#F1F4EC]",
   },
 ];
 

@@ -57,7 +57,7 @@ const refreshToken = async (force: boolean = false): Promise<string> => {
     }
     
     refreshPromise = (async () => {
-      const response = await fetch('https://tsunamiapiv4.localexplorers.com/api/common/regeneratetoken', {
+      const response = await fetch('http://tsunamistagingv2api.azurewebsites.net/api/common/regeneratetoken', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

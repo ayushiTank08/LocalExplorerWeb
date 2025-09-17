@@ -54,7 +54,7 @@ export const Slider: React.FC<ImageGalleryProps> = React.memo(({
         {images.length > 1 && (
           <>
             <Button
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all cursor-pointer"
               onClick={() => onImageChange(currentImageIndex > 0 ? currentImageIndex - 1 : images.length - 1)}
             >
               <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,7 +62,7 @@ export const Slider: React.FC<ImageGalleryProps> = React.memo(({
               </svg>
             </Button>
             <Button
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-all cursor-pointer"
               onClick={() => onImageChange(currentImageIndex < images.length - 1 ? currentImageIndex + 1 : 0)}
             >
               <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@ export const Slider: React.FC<ImageGalleryProps> = React.memo(({
             {images.map((_, i) => (
               <button
                 key={i}
-                className={`w-2 h-2 rounded-full transition-all ${i === currentImageIndex ? 'bg-[var(--color-primary)]' : 'bg-white/50'}`}
+                className={`w-3 h-3 rounded-full cursor-pointer transition-all ${i === currentImageIndex ? 'bg-[var(--color-secondary)]' : 'bg-white/50'}`}
                 onClick={() => onImageChange(i)}
               />
             ))}
