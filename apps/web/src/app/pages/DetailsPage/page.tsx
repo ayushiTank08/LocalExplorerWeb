@@ -63,6 +63,33 @@ function DetailsContent() {
   // const deals = useAppSelector(selectDeals);
   const dealsAndCouponsLoading = useAppSelector(selectDealsAndCouponsLoading);
   const dealsAndCouponsError = useAppSelector(selectDealsAndCouponsError);
+
+  const formatCouponDescription = (description: string) => {
+  if (!description) return '';
+  
+  const [beforePipe, ...afterPipeParts] = description.split('|');
+  const afterPipe = afterPipeParts.join('|').trim();
+  const promoCodeRegex = /(Promo Code:?\s*[A-Z0-9]+)/i;
+  const promoCodeMatch = beforePipe.match(promoCodeRegex);
+  
+  let result = [];
+  if (promoCodeMatch) {
+    result.push(`<div class="flex justify-center"><span class="text-lg font-bold text-[var(--color-secondary)] px-4 rounded-full">${promoCodeMatch[0]}</span></div>`);
+    
+    const afterPromoCode = beforePipe.slice(promoCodeMatch.index! + promoCodeMatch[0].length).trim();
+    if (afterPromoCode) {
+      result.push(`<div class="text-sm text-[var(--color-secondary)]">${afterPromoCode}</div>`);
+    }
+  } else {
+    if (beforePipe.trim()) {
+      result.push(`<div class="text-sm text-[var(--color-secondary)]">${beforePipe.trim()}</div>`);
+    }
+  }
+  if (afterPipe) {
+    result.push(`<div class="mt-2">${afterPipe}</div>`);
+  }
+  return result.join('');
+};
   
   useEffect(() => {
   }, [coupons, deals, dealsAndCouponsLoading, dealsAndCouponsError]);
@@ -636,7 +663,9 @@ function DetailsContent() {
                             <div className="text-sm text-gray-700">
                                   <div
                                     className="text-sm text-[var(--color-secondary)] mt-2"
-                                    dangerouslySetInnerHTML={{ __html: coupon.Description ?? "" }}
+                                    dangerouslySetInnerHTML={{ 
+                                      __html: formatCouponDescription(coupon.Description ?? "")
+                                    }}
                                   />
                                   {coupon.CouponProgramDescription && (
                                     <div
@@ -644,7 +673,7 @@ function DetailsContent() {
                                       dangerouslySetInnerHTML={{ __html: coupon.CouponProgramDescription }}
                                     />
                                   )}
-                              <span className="font-medium">Expiration Date:</span>{" "}
+                                  <span className="font-medium">Expiration Date:</span>{" "}
                               <span className="font-bold">
                                 {coupon.EndDate
                                   ? new Date(coupon.EndDate).toLocaleDateString()
