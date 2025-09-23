@@ -612,35 +612,38 @@ function DetailsContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {coupons.map((coupon) => (
                       <div key={coupon.Id} className="rounded-lg overflow-hidden">
-                        <div className="bg-[#F6E1B7] min-h-[130px] relative p-1">
-                          <div className="border border-dashed border-[var(--color-secondary)] rounded p-5.5 text-center">
-                            {/* {coupon.Logo ? (
-                              <div className="mt-2">
+                              {coupon.Logo ? (
+                                <div className="mt-2 border-x border-t border-dashed border-gray-300 rounded-t-lg p-4 space-y-2">
                                 <img
                                   src={coupon.Logo}
                                   alt={coupon.Title}
-                                  className="mx-auto object-contain  w-40 h-40"
+                                    className="mx-auto object-contain h-40"
                                 />
                               </div>
                             ) : (
+                                <div className="bg-[#F6E1B7] relative p-1">
+                                  <div className="border border-dashed border-[var(--color-secondary)] rounded p-5.5 text-center">
                               <h4 className="text-xl font-bold text-[var(--color-secondary)]">
                                 {coupon.Title}
                               </h4>
-                            )} */}
-                              <h4 className="text-xl font-bold text-[var(--color-secondary)]">
-                                {coupon.Title}
-                              </h4>
-                            <div
-                              className="text-sm text-[var(--color-secondary)] mt-2"
-                              dangerouslySetInnerHTML={{ __html: coupon.Description ?? "" }}
-                            />
                             <div className="absolute top-3 right-3 w-9 h-9 bg-white rounded-full flex items-center justify-center">
                               <img src="/assets/Icons/Scissors.svg" alt="Coupon" className="w-6 h-6" />
                             </div>
                           </div>
                         </div>
+                              )}
                         <div className="border-x border-b border-dashed border-gray-300 rounded-b-lg p-4 space-y-2">
                             <div className="text-sm text-gray-700">
+                                  <div
+                                    className="text-sm text-[var(--color-secondary)] mt-2"
+                                    dangerouslySetInnerHTML={{ __html: coupon.Description ?? "" }}
+                                  />
+                                  {coupon.CouponProgramDescription && (
+                                    <div
+                                      className="text-gray-800 text-sm leading-relaxed mt-2"
+                                      dangerouslySetInnerHTML={{ __html: coupon.CouponProgramDescription }}
+                                    />
+                                  )}
                               <span className="font-medium">Expiration Date:</span>{" "}
                               <span className="font-bold">
                                 {coupon.EndDate

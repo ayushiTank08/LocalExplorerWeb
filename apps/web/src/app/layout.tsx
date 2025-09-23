@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAppSelector } from '../store/hooks';
 import type { Metadata } from "next";
 import { initTokenRefresh } from "@/utils/tokenRefresh";
@@ -12,23 +12,55 @@ import Header from "./components/Header/Header/Header";
 import SubHeader from "./components/Header/SubHeader/SubHeader";
 import { LocationDetailsSubheader } from "./components/Header/SubHeader/LocationDetailsSubheader";
 import Footer from "./components/Footer/Footer";
-import { NotificationCenter } from "@/components/Notifications/NotificationCenter";
+import { NotificationCenter } from "@/app/components/Notifications/NotificationCenter";
 
 function SubHeaderWrapper({ isSearchActive }: { isSearchActive: boolean }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { selectedPlace } = useAppSelector((state: any) => state.places);
+  const locationDetails = useAppSelector((state: any) => state.locationDetails.data);
+  const coupons = useAppSelector((state: any) => state.locationDetails.coupons);
+  const deals = useAppSelector((state: any) => state.locationDetails.deals);
   
   const isDetailsPage = pathname?.startsWith('/pages/DetailsPage');
+  const hasIdParam = searchParams?.has('id');
 
-  if (isDetailsPage && selectedPlace) {
-    return (
-      <LocationDetailsSubheader 
-        title={selectedPlace.Title}
-        category={selectedPlace.Category || 'Location'}
-        imageUrl={selectedPlace.Thumb || selectedPlace.Image}
-      />
-    );
+  if (isDetailsPage && hasIdParam) {
+    if (locationDetails) {
+      return (
+        <LocationDetailsSubheader 
+          title={locationDetails.Title}
+          category={locationDetails.Category || 'Location'}
+          imageUrl={locationDetails.Logo || locationDetails.Images?.[0]}
+          sections={{
+            events: locationDetails.Events?.length > 0,
+            passes: locationDetails.Passes?.length > 0,
+            deals: (deals && deals.length > 0) || (locationDetails.Deals?.length > 0),
+            coupons: (coupons && coupons.length > 0) || (locationDetails.Coupons?.length > 0),
+            posts: locationDetails.Activities?.length > 0
+          }}
+        />
+      );
+    }
+    if (selectedPlace) {
+      return (
+        <LocationDetailsSubheader 
+          title={selectedPlace.Title}
+          category={selectedPlace.Category || 'Location'}
+          imageUrl={selectedPlace.Thumb || selectedPlace.Image}
+          sections={{
+            events: selectedPlace.Events?.length > 0,
+            passes: selectedPlace.Passes?.length > 0,
+            deals: (deals && deals.length > 0) || (selectedPlace.Deals?.length > 0),
+            coupons: (coupons && coupons.length > 0) || (selectedPlace.Coupons?.length > 0),
+            posts: selectedPlace.Activities?.length > 0
+          }}
+        />
+      );
+    }
+    return <div className="h-16 bg-white border-b border-gray-200"></div>;
   }
+  
   return <SubHeader isSearchActive={isSearchActive} />;
 }
 

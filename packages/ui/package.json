@@ -6,6 +6,7 @@
   "types": "./src/component/index.ts",
   "exports": {
     ".": "./src/component/index.ts",
+    "./common-modal": "./src/component/CommonModal/CommonModal.tsx",
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
     "./input": "./src/input.tsx",

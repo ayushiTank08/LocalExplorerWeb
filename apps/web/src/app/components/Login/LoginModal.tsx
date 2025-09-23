@@ -84,8 +84,9 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
       let response;
       try {
         response = await apiRequest<LoginResponse>({
-        url: 'https://tsunamistagingv2api.azurewebsites.net/api/Common/Login',
-        method: 'PUT',
+          url: API_ENDPOINTS.LOGIN,
+          method: 'PUT' as const,
+          headers: DEFAULT_REQUEST_OPTIONS.headers,
         body: {
           customerId: 5588,
           uniqueId: '5112d4b1-419c-4ed0-bd58-9a6ba3f4e363',

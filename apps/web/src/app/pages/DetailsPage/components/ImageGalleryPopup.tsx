@@ -152,14 +152,12 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
                           <span className="text-gray-400">No image</span>
                         </div>
                       )}
-                                            {process.env.NODE_ENV === 'development' && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-white/80 text-[13px] p-2 truncate">
-                          <span className="text-[#000000]/70">Posted by:</span>{' '}
-                          <span className="text-[var(--color-secondary)] font-bold">
-                            {decryptedActivity.FirstName || 'User'} {decryptedActivity.LastName || ''}
-                          </span>
-                        </div>
-                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-white/80 text-[13px] p-2 truncate">
+                        <span className="text-[#000000]/70">Posted by:</span>{' '}
+                        <span className="text-[var(--color-secondary)] font-bold">
+                          {decryptedActivity.FirstName || 'User'} {decryptedActivity.LastName || ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );

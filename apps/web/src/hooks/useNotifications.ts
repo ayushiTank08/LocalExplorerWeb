@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { showNotification } from '@/components/Notifications/NotificationCenter';
+import { showNotification } from '@/app/components/Notifications/NotificationCenter';
 
 type NotificationType = 'success' | 'error' | 'info' | 'warning';
 
