@@ -26,6 +26,18 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.icon {
+  fill: var(--color-neutral-300);
+  color: var(--color-neutral-300);
+  stroke: currentColor;
+  transition: all 0.2s ease;
+}
+
+.icon.active {
+  fill: var(--color-secondary);
+  color: var(--color-secondary);
+}
+
 .mapboxgl-popup-tip {
   display: none !important;
 }
