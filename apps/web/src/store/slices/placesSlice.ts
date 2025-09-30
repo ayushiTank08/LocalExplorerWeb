@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiRequest } from '@/utils/api';
 import { API_ENDPOINTS, DEFAULT_REQUEST_OPTIONS } from '@/config/api.config';
+import { LOCATION_CONFIG } from '@/config/location.config';
 
 export interface Place {
   Id: number;
@@ -170,7 +171,7 @@ export const fetchDefaultLocation = createAsyncThunk(
       method: 'PUT',
       params: {
         appName: 'MC',
-        customerid: 5588
+        customerid: LOCATION_CONFIG.CUSTOMER_ID
       }
     });
     return response.Data;
@@ -239,7 +240,7 @@ export const fetchRegions = createAsyncThunk(
   'places/fetchRegions',
   async (params: { customerId?: number; pageNumber?: number; pageSize?: number; sectionId?: number; languageId?: number } | undefined) => {
     const payload = {
-      CustomerId: params?.customerId ?? 5588,
+      CustomerId: params?.customerId ?? LOCATION_CONFIG.CUSTOMER_ID,
       PageNumber: params?.pageNumber ?? 1,
       PageSize: params?.pageSize ?? 50,
       SectionId: params?.sectionId ?? 0,
@@ -272,7 +273,7 @@ export const fetchPlaces = createAsyncThunk(
   'places/fetchPlaces',
   async (params: { latitude: number; longitude: number; searchText?: string; regionId?: number }) => {
     const payload = {
-      CustomerId: 5775,
+      CustomerId: LOCATION_CONFIG.CUSTOMER_ID,
       LanguageCode: 'en-US',
       CategoryId: '0',
       Latitude: params.latitude,

@@ -13,6 +13,12 @@ import SubHeader from "./components/Header/SubHeader/SubHeader";
 import { LocationDetailsSubheader } from "./components/Header/SubHeader/LocationDetailsSubheader";
 import Footer from "./components/Footer/Footer";
 import { NotificationCenter } from "@/app/components/Notifications/NotificationCenter";
+import dynamic from 'next/dynamic';
+
+const BottomNavigation = dynamic(
+  () => import('@/app/components/BottomNavigation/BottomNavigation'),
+  { ssr: false }
+);
 
 function SubHeaderWrapper({ isSearchActive }: { isSearchActive: boolean }) {
   const pathname = usePathname();
@@ -102,15 +108,16 @@ function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <StoreProvider>
-          <div className="min-h-screen flex flex-col">
-            <NotificationCenter />
+          <div className="flex flex-col min-h-screen">
             <Header onSearchToggle={() => setIsSearchActive(!isSearchActive)} />
             <SubHeaderWrapper isSearchActive={isSearchActive} />
             <main className="flex-grow bg-[var(--color-primary-lighter)] pb-16 lg:pb-0">
               {children}
             </main>
             <Footer />
+            <BottomNavigation />
           </div>
+          <NotificationCenter />
         </StoreProvider>
       </body>
     </html>

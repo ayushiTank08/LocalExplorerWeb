@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { Button } from "@nextforge/ui";
 import { apiRequest } from "@/utils/api";
+import { API_ENDPOINTS, DEFAULT_REQUEST_OPTIONS } from "@/config/api.config";
+import { LOCATION_CONFIG } from "@/config/location.config";
 import CryptoJS from 'crypto-js';
 import { toast } from 'react-hot-toast';
 import { useNotifications } from "@/hooks/useNotifications";
+import CommonModal from "../../../../../../packages/ui/src/component/CommonModal/CommonModal";
 
 // const ENCRYPTION_KEY = '9ec52ebdeac36c4dc2c4fcdf5988b7d4';
 // const ENCRYPTION_IV = 'U1MV7WIMbz0EcAC1';
@@ -87,9 +90,9 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
           url: API_ENDPOINTS.LOGIN,
           method: 'PUT' as const,
           headers: DEFAULT_REQUEST_OPTIONS.headers,
-        body: {
-          customerId: 5588,
-          uniqueId: '5112d4b1-419c-4ed0-bd58-9a6ba3f4e363',
+          body: {
+          customerId: LOCATION_CONFIG.CUSTOMER_ID,
+          uniqueId: LOCATION_CONFIG.DEFAULT_LOCATION_ID,
           email: encryptedEmail,
           password: encryptedPassword,
           oldPassword: null,
@@ -112,10 +115,10 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
           neonAutoRenew: false,
           expiryDate: '0001-01-01T00:00:00',
           showLeaderBoardBrewery: false,
-          appType: 1,
-          appName: 'Marion County',
+          appType: LOCATION_CONFIG.APP_TYPE,
+          appName: LOCATION_CONFIG.APP_NAME,
           deviceTokenId: '',
-          deviceType: 'WEB',
+          deviceType: LOCATION_CONFIG.DEVICE_TYPE,
           isOldApp: false,
           isMigrated: null,
           isAutoLogin: false
@@ -152,47 +155,47 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
   };
 
   return (
-    <div
-      className="fixed inset-0 flex items-start justify-center z-[9999] pt-60 bg-black/50"
-      onClick={onClose}
+    <CommonModal
+      isOpen={isOpen}
+      onClose={onClose}
+      showCloseButton={false}
     >
-      <div
-        className="bg-white rounded-lg shadow-lg w-full max-w-[500px] p-6 relative animate-slideDown"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="p-2 w-full">
         <h2 className="text-center text-xl font-semibold mb-6">Login</h2>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]/90"
-          />
-        </div>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]/90"
+              required
+            />
+          </div>
 
-        <div className="mb-2 relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]/90"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
-          >
-            👁
-          </button>
-        </div>
+          <div className="mb-2 relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-secondary)]/90"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-2.5 text-gray-500 cursor-pointer"
+            >
+              {showPassword ? '🙈' : '👁'}
+            </button>
+          </div>
 
-        <div className="mb-4 text-sm text-[var(--color-secondary)] cursor-pointer hover:underline">
-          Forgot Password?
-        </div>
+          <div className="mb-4 text-sm text-[var(--color-secondary)] cursor-pointer hover:underline">
+            Forgot Password?
+          </div>
 
         <Button 
           type="submit"
@@ -212,7 +215,6 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
           <div className="flex justify-center mt-6">
             <Button
               type="button"
-              // variant="outline"
               className="px-6 py-2 hover:bg-gray-200 cursor-pointer"
               onClick={onClose}
               disabled={isLoading}
@@ -221,8 +223,7 @@ export function LoginModal({ onClose, onLoginSuccess }: LoginModalProps) {
             </Button>
           </div>
         </form>
-
       </div>
-    </div>
+    </CommonModal>
   );
 }

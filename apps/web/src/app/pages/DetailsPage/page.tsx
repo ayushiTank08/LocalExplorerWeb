@@ -1,11 +1,11 @@
 "use client";
-import React, { Suspense, useState, useEffect, useMemo, useCallback } from "react";
+import React, { Suspense, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { useAppSelector, useAppDispatch } from '../../../store/hooks';
 
 const WeatherWidget = dynamic(
-  () => import('@/components/WeatherWidget/WeatherWidget'),
+  () => import('@/app/components/WeatherWidget/WeatherWidget'),
   { ssr: false }
 );
 import type { RootState } from '../../../store';
@@ -17,6 +17,7 @@ import { selectCoupons, selectDeals, selectDealsAndCouponsLoading, selectDealsAn
 import { ImageGalleryPopup } from './components/ImageGalleryPopup';
 import { Button } from "@nextforge/ui";
 import { decryptData } from "@/utils/encryption";
+import { LOCATION_CONFIG } from "@/config/location.config";
 
 const Slider = dynamic(() => import('./components/Slider').then(mod => mod.Slider), { ssr: false });
 const StaticMap = dynamic(() => import('./components/StaticMap').then(mod => mod.default), { ssr: false });
@@ -64,6 +65,44 @@ function DetailsContent() {
   const dealsAndCouponsLoading = useAppSelector(selectDealsAndCouponsLoading);
   const dealsAndCouponsError = useAppSelector(selectDealsAndCouponsError);
 
+  const formatDescriptionWithReadMore = (text: string, maxLength: number = 100) => {
+    if (!text) return '';
+    
+    const uniqueId = `desc-${Math.random().toString(36).substr(2, 9)}`;
+    
+    if (text.length <= maxLength) {
+      return text;
+    }
+    
+    const shortText = text.substring(0, maxLength) + '...';
+    return `
+      <div class="relative">
+        <div id="short-${uniqueId}" class="block">
+          ${shortText}
+          <button onclick="
+            const short = document.getElementById('short-${uniqueId}');
+            const full = document.getElementById('full-${uniqueId}');
+            if (short && full) {
+              short.classList.add('hidden');
+              full.classList.remove('hidden');
+            }
+          " class="text-[var(--color-secondary)] font-medium ml-1 cursor-pointer">Read More</button>
+        </div>
+        <div id="full-${uniqueId}" class="hidden">
+          ${text}
+          <button onclick="
+            const short = document.getElementById('short-${uniqueId}');
+            const full = document.getElementById('full-${uniqueId}');
+            if (short && full) {
+              short.classList.remove('hidden');
+              full.classList.add('hidden');
+            }
+          " class="text-[var(--color-secondary)] font-medium mt-1 block cursor-pointer">Show Less</button>
+        </div>
+      </div>
+    `;
+  };
+
   const formatCouponDescription = (description: string) => {
   if (!description) return '';
   
@@ -80,14 +119,15 @@ function DetailsContent() {
     if (afterPromoCode) {
       result.push(`<div class="text-sm text-[var(--color-secondary)]">${afterPromoCode}</div>`);
     }
-  } else {
-    if (beforePipe.trim()) {
+    } else if (beforePipe.trim()) {
       result.push(`<div class="text-sm text-[var(--color-secondary)]">${beforePipe.trim()}</div>`);
     }
-  }
+    
   if (afterPipe) {
-    result.push(`<div class="mt-2">${afterPipe}</div>`);
+      const formattedText = (afterPipe);
+      result.push(`<div class="mt-2">${formattedText}</div>`);
   }
+    
   return result.join('');
 };
   
@@ -95,16 +135,118 @@ function DetailsContent() {
   }, [coupons, deals, dealsAndCouponsLoading, dealsAndCouponsError]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const actionButtons = [
-    { icon: "/assets/Location_Details_Logos/Phone.svg", alt: "Call" },
-    { icon: "/assets/Location_Details_Logos/Ways.svg", alt: "Directions" },
-    { icon: "/assets/Location_Details_Logos/Share.svg", alt: "Share" },
-    { icon: "/assets/Location_Details_Logos/Save.svg", alt: "Save" },
-    { icon: "/assets/Location_Details_Logos/Like.svg", alt: "Like" },
-    { icon: "/assets/Location_Details_Logos/Pin.svg", alt: "Pin" },
-  ];
+  const handleCall = useCallback(() => {
+    if (locationDetails?.Phone) {
+      window.location.href = `tel:${locationDetails.Phone}`;
+    }
+  }, [locationDetails?.Phone]);
+
+  const handleDirections = useCallback(() => {
+    if (locationDetails?.Latitude && locationDetails?.Longitude) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const url = isMobile 
+        ? `https://www.google.com/maps/dir/?api=1&destination=${locationDetails.Latitude},${locationDetails.Longitude}`
+        : `https://www.google.com/maps?q=${locationDetails.Latitude},${locationDetails.Longitude}`;
+      window.open(url, '_blank');
+    }
+  }, [locationDetails?.Latitude, locationDetails?.Longitude]);
+
+  const handleShare = useCallback(async () => {
+    const shareData = {
+      title: locationDetails?.Name || 'Location',
+      text: `Check out ${locationDetails?.Name} on LocalExplorer`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  }, [locationDetails?.Name]);
 
   const locationId = useMemo(() => id ? parseInt(id) : null, [id]);
+  const [isPinned, setIsPinned] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  
+  const handlePin = useCallback(() => {
+    const newPinnedState = !isPinned;
+    setIsPinned(newPinnedState);
+    if (locationId) {
+      const pinnedLocations = JSON.parse(localStorage.getItem('pinnedLocations') || '{}');
+      if (newPinnedState) {
+        pinnedLocations[locationId] = true;
+      } else {
+        delete pinnedLocations[locationId];
+      }
+      localStorage.setItem('pinnedLocations', JSON.stringify(pinnedLocations));
+    }
+  }, [isPinned, locationId]);
+  
+  const handleLike = useCallback(() => {
+    const newLikedState = !isLiked;
+    setIsLiked(newLikedState);
+    if (locationId) {
+      const likedLocations = JSON.parse(localStorage.getItem('likedLocations') || '{}');
+      if (newLikedState) {
+        likedLocations[locationId] = true;
+      } else {
+        delete likedLocations[locationId];
+      }
+      localStorage.setItem('likedLocations', JSON.stringify(likedLocations));
+    }
+  }, [isLiked, locationId]);
+  
+  useEffect(() => {
+    if (locationId) {
+      const pinnedLocations = JSON.parse(localStorage.getItem('pinnedLocations') || '{}');
+      setIsPinned(!!pinnedLocations[locationId]);
+      
+      const likedLocations = JSON.parse(localStorage.getItem('likedLocations') || '{}');
+      setIsLiked(!!likedLocations[locationId]);
+    }
+  }, [locationId]);
+
+  const actionButtons = [
+    { 
+      icon: "/assets/Location_Details_Logos/Phone.svg", 
+      alt: "Call",
+      onClick: handleCall,
+      disabled: !locationDetails?.Phone
+    },
+    { 
+      icon: "/assets/Location_Details_Logos/Ways.svg", 
+      alt: "Directions",
+      onClick: handleDirections,
+      disabled: !(locationDetails?.Latitude && locationDetails?.Longitude)
+    },
+    { 
+      icon: "/assets/Location_Details_Logos/Share.svg", 
+      alt: "Share",
+      onClick: handleShare
+    },
+    { 
+      icon: "/assets/Location_Details_Logos/Save.svg", 
+      alt: "Save",
+      onClick: () => console.log('Save clicked')
+    },
+    { 
+      icon: isLiked ? "/assets/Location_Details_Logos/Like-Filled.svg" : "/assets/Location_Details_Logos/Like.svg", 
+      alt: isLiked ? "Unlike" : "Like",
+      onClick: handleLike
+    },
+    { 
+      icon: isPinned ? "/assets/Location_Details_Logos/Pin-Filled.svg" : "/assets/Location_Details_Logos/Pin.svg", 
+      alt: isPinned ? "Unpin" : "Pin",
+      onClick: handlePin
+    },
+  ];
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,17 +262,16 @@ function DetailsContent() {
         await Promise.all([
           dispatch(fetchLocationDetails({ 
             locationId, 
-            customerId: 5588 
+            customerId: LOCATION_CONFIG.CUSTOMER_ID 
           })).unwrap().then((data) => {
             console.log('Location details loaded:', {
               hasLatLng: !!(data?.Latitude && data?.Longitude),
-              data: data
             });
             setStamped(data?.Stamped || false);
           }),
           dispatch(fetchDealsAndCoupons({ 
             locationId, 
-            customerId: 5588 
+            customerId: LOCATION_CONFIG.CUSTOMER_ID 
           }))
         ]);
         
@@ -242,7 +383,8 @@ function DetailsContent() {
   }
 
   return (
-    <div className="min-h-screen max-w-[1440px] flex justify-center mx-auto">
+    <div className="min-h-screen">
+      <div className="max-w-[1440px] flex justify-center mx-auto">
       <div className="mx-auto py-6 px-6 lg:px-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className={`lg:col-span-2 ${(placeToRender?.Image || (locationDetails?.Images && locationDetails.Images.length > 0)) ? 'space-y-6' : 'space-y-0'}`}>
@@ -329,17 +471,29 @@ function DetailsContent() {
                     {actionButtons.map((btn, idx) => (
                       <div
                         key={idx}
-                        className="group flex items-center rounded-full border border-[var(--color-neutral)]
+                        onClick={btn.onClick}
+                        className={`group flex items-center rounded-full border ${btn.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} border-[var(--color-neutral)]
                           transition-all duration-300 overflow-hidden 
-                          w-[40px] sm:w-[47px] hover:w-auto cursor-pointer"
+                          w-[40px] sm:w-[47px] hover:w-auto ${btn.disabled ? '' : 'hover:bg-gray-50'}`}
+                        title={btn.alt}
+                        aria-label={btn.alt}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && !btn.disabled && btn.onClick()}
+                        style={btn.disabled ? { pointerEvents: 'none' } : {}}
                       >
                         <div className="w-10 h-10 sm:w-11 sm:h-11 flex justify-center items-center flex-shrink-0">
-                          <img src={btn.icon} alt={btn.alt} className="w-5 h-5" />
+                          <img 
+                            src={btn.icon} 
+                            alt={btn.alt} 
+                            className="w-5 h-5" 
+                            style={{ filter: btn.disabled ? 'grayscale(100%)' : 'none' }}
+                          />
                         </div>
 
                         <span
-                          className="whitespace-nowrap text-[var(--color-neutral)] text-xs sm:text-sm opacity-0 
-                            group-hover:opacity-100 transition-opacity duration-300 ml-2 pr-3"
+                          className={`whitespace-nowrap text-[var(--color-neutral)] text-xs sm:text-sm opacity-0 
+                            group-hover:opacity-100 transition-opacity duration-300 ml-2 pr-3 ${btn.disabled ? 'text-gray-400' : ''}`}
                         >
                           {btn.alt}
                         </span>
@@ -349,7 +503,7 @@ function DetailsContent() {
                 </div>
 
                 {isLocationDetailsLoading ? (
-                  <div className="flex justify-center py-8">
+                  <div className="flex justify-center py-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
                   </div>
                 ) : locationDetailsError ? (
@@ -489,7 +643,7 @@ function DetailsContent() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-4 text-gray-500">
                     No upcoming events at this time.
                   </div>
                 )}
@@ -574,7 +728,7 @@ function DetailsContent() {
                 <h3 className="text-2xl font-semibold text-gray-900 mb-4">Deals</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {deals.map((deal: any) => (
-                    <div key={deal.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                    <div key={deal.id} className="bg-white rounded-2xl overflow-hidden shadow-sm h-[299px]">
                       <div className="h-34 relative">
                         <img
                           src={deal.image}
@@ -587,7 +741,7 @@ function DetailsContent() {
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 flex flex-col h-34">
+                      <div className="p-4 flex flex-col">
                         <h3 className="font-semibold text-base text-gray-900 mb-2">
                           {deal.title}
                         </h3>
@@ -607,8 +761,9 @@ function DetailsContent() {
                             {deal.location}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mt-2 leading-relaxed flex-grow line-clamp-2">
-                          {deal.description}
+                        <p className="text-sm text-gray-600 mt-2 leading-relaxed flex-grow">
+                          {deal.description.split(" ").slice(0, 8).join(" ")}
+                          {deal.description.split(" ").length > 8 && "..."}
                         </p>
                       </div>
                     </div>
@@ -630,9 +785,9 @@ function DetailsContent() {
               <div className="mb-8">
                 <div className="border-t border-gray-200 my-8"></div>
                 {dealsAndCouponsLoading ? (
-                  <div className="text-center py-8">Loading coupons...</div>
+                  <div className="text-center py-4">Loading coupons...</div>
                 ) : coupons.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">No coupons available at this time.</div>
+                  <div className="text-center py-4 text-gray-500">No coupons available at this time.</div>
                 ) : (
                   <div id="coupons">
                   <h3 className="text-2xl font-semibold text-gray-900 mb-4">Coupons</h3>
@@ -644,7 +799,7 @@ function DetailsContent() {
                                 <img
                                   src={coupon.Logo}
                                   alt={coupon.Title}
-                                    className="mx-auto object-contain h-40"
+                                    className="mx-auto object-contain"
                                 />
                               </div>
                             ) : (
@@ -659,18 +814,20 @@ function DetailsContent() {
                           </div>
                         </div>
                               )}
-                        <div className="border-x border-b border-dashed border-gray-300 rounded-b-lg p-4 space-y-2">
+                              <div className="border-x border-b border-dashed border-gray-300 rounded-b-lg px-4 pb-4 pt-0 space-y-2">
                             <div className="text-sm text-gray-700">
                                   <div
-                                    className="text-sm text-[var(--color-secondary)] mt-2"
+                                    className="text-sm mt-2 cursor-pointer"
                                     dangerouslySetInnerHTML={{ 
-                                      __html: formatCouponDescription(coupon.Description ?? "")
+                                      __html: (coupon.Description ?? "")
                                     }}
                                   />
                                   {coupon.CouponProgramDescription && (
                                     <div
-                                      className="text-gray-800 text-sm leading-relaxed mt-2"
-                                      dangerouslySetInnerHTML={{ __html: coupon.CouponProgramDescription }}
+                                      className="text-sm leading-relaxed mt-2 cursor-pointer"
+                                      dangerouslySetInnerHTML={{ 
+                                        __html: formatDescriptionWithReadMore(coupon.CouponProgramDescription) 
+                                      }}
                                     />
                                   )}
                                   <span className="font-medium">Expiration Date:</span>{" "}
@@ -735,7 +892,7 @@ function DetailsContent() {
                         ))}
                     </div>
                     <p className="text-sm text-gray-600">
-                      Loved by <span className="font-semibold">100+</span> customers
+                      Loved by <span className="font-semibold">{activities.filter(act => act.Comment?.trim()).length}+</span> customers
                     </p>
                   </div>
                 )}
@@ -840,7 +997,7 @@ function DetailsContent() {
                   {activities.filter(
                     act => act.Comment?.trim() && act.Comment.toLowerCase() !== "giveaway"
                   ).length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-4 text-gray-500">
                         No comments yet. Be the first to share your experience!
                       </div>
                     )}
@@ -853,7 +1010,10 @@ function DetailsContent() {
                     <Button
                       className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded font-medium hover:bg-[var(--color-primary)] hover:text-white transition-colors cursor-pointer"
                     >
-                      Show all ({activities.filter(act => act.Comment?.trim() && act.Comment.toLowerCase() !== "giveaway").length})
+                      {(() => {
+                        const count = activities.filter(act => act.Comment?.trim() && act.Comment.toLowerCase() !== "giveaway").length;
+                        return count > 9 ? `Show all (+${count})` : `Show all (${count})`;
+                          })()}
                     </Button>
                   </div>
                 )}
@@ -1004,6 +1164,7 @@ function DetailsContent() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">Local Weather</h3>
                 <div className="bg-[var(--color-border-primary)] rounded-lg p-5 text-white space-y-2">
                   <WeatherWidget location={placeToRender?.City || 'Ocala'} />
+                </div>
                 </div>
               </div>
             </div>
