@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { decryptData } from "@/utils/encryption";
 import { Button } from "@headlessui/react";
+import CommonModal from "../../../../../../../packages/ui/src/component/CommonModal/CommonModal";
 
 interface Activity {
   Id: number;
@@ -78,18 +79,16 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
 
   if (!isVisible && !isOpen) return null;
 
+  if (!isOpen) return null;
+
   return (
-    <div
-      onClick={onClose}
-      className={`fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300 ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
+    <CommonModal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      size="lg"
+      showCloseButton={false}
     >
-      <div
-        className="relative bg-white rounded-lg overflow-hidden w-full max-w-6xl h-[80vh] flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+      <div className="w-full max-w-6xl max-h-[80vh] flex flex-col">
         <div className="flex justify-between items-center py-4 border-b border-[#D6D7D6] mx-4">
           <div>
             <h2 className="text-xl font-semibold">Gallery</h2>
@@ -152,14 +151,12 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
                           <span className="text-gray-400">No image</span>
                         </div>
                       )}
-                                            {process.env.NODE_ENV === 'development' && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-white/80 text-[13px] p-2 truncate">
-                          <span className="text-[#000000]/70">Posted by:</span>{' '}
-                          <span className="text-[var(--color-secondary)] font-bold">
-                            {decryptedActivity.FirstName || 'User'} {decryptedActivity.LastName || ''}
-                          </span>
-                        </div>
-                      )}
+                      <div className="absolute bottom-0 left-0 right-0 bg-white/80 text-[13px] p-2 truncate">
+                        <span className="text-[#000000]/70">Posted by:</span>{' '}
+                        <span className="text-[var(--color-secondary)] font-bold">
+                          {decryptedActivity.FirstName || 'User'} {decryptedActivity.LastName || ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -168,6 +165,6 @@ export const ImageGalleryPopup: React.FC<ImageGalleryPopupProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </CommonModal>
   );
 };

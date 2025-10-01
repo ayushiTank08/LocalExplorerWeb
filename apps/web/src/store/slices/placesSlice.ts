@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apiRequest } from '@/utils/api';
+import { API_ENDPOINTS, DEFAULT_REQUEST_OPTIONS } from '@/config/api.config';
+import { LOCATION_CONFIG } from '@/config/location.config';
 
 export interface Place {
   Id: number;
@@ -165,11 +167,11 @@ export const fetchDefaultLocation = createAsyncThunk(
   'places/fetchDefaultLocation',
   async () => {
     const response = await apiRequest<{ Data: DefaultLocation }>({
-      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getDefaultLocation',
+      url: `${API_ENDPOINTS.DEFAULT_LOCATION}`,
       method: 'PUT',
       params: {
         appName: 'MC',
-        customerid: 5588
+        customerid: LOCATION_CONFIG.CUSTOMER_ID
       }
     });
     return response.Data;
@@ -191,7 +193,7 @@ export const fetchCategories = createAsyncThunk(
       FilterType: params?.filterType ?? 1,
     };
     const response = await apiRequest<{ Data: CategoryNode[] }>({
-      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getmastercategorygrouplocationsummary',
+      url: `${API_ENDPOINTS.CATEGORIES}`,
       method: 'PUT',
       body: payload
     });
@@ -238,7 +240,7 @@ export const fetchRegions = createAsyncThunk(
   'places/fetchRegions',
   async (params: { customerId?: number; pageNumber?: number; pageSize?: number; sectionId?: number; languageId?: number } | undefined) => {
     const payload = {
-      CustomerId: params?.customerId ?? 5588,
+      CustomerId: params?.customerId ?? LOCATION_CONFIG.CUSTOMER_ID,
       PageNumber: params?.pageNumber ?? 1,
       PageSize: params?.pageSize ?? 50,
       SectionId: params?.sectionId ?? 0,
@@ -246,7 +248,7 @@ export const fetchRegions = createAsyncThunk(
     };
 
     const response = await apiRequest<{ Data: { List: Region[] } }>({
-      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getcustomerregions',
+      url: `${API_ENDPOINTS.REGIONS}`,
       method: 'PUT',
       body: payload
     });
@@ -271,7 +273,7 @@ export const fetchPlaces = createAsyncThunk(
   'places/fetchPlaces',
   async (params: { latitude: number; longitude: number; searchText?: string; regionId?: number }) => {
     const payload = {
-      CustomerId: 5775,
+      CustomerId: LOCATION_CONFIG.CUSTOMER_ID,
       LanguageCode: 'en-US',
       CategoryId: '0',
       Latitude: params.latitude,
@@ -290,7 +292,7 @@ export const fetchPlaces = createAsyncThunk(
     };
 
     const response = await apiRequest<{ Data: { List: Place[] } }>({
-      url: 'https://tsunamistagingv2api.azurewebsites.net/api/content/v4/getlocations',
+      url: `${API_ENDPOINTS.LOCATION_DATA}`,
       method: 'PUT',
       body: payload
     });

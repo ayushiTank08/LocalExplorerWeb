@@ -1,5 +1,6 @@
 import { store } from '@/store';
 import { setToken } from '@/store/slices/placesSlice';
+import { LOCATION_CONFIG } from '@/config/location.config';
 
 interface TokenResponse {
   Status: number;
@@ -63,9 +64,11 @@ const refreshToken = async (force: boolean = false): Promise<string> => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          CustomerId: 5588,
+          CustomerId: LOCATION_CONFIG.CUSTOMER_ID,
           Email: '9s45MVLyw74ptQfsS1NA+B/Igel3mQKjGs+6X8brwoQ=',
           Password: 'j2IoBSUlGS4iEDVcqBhauA==',
+          // Email: 'chg/T2e0wgbvGVQ9b76SHTuvxMDZ3JhtpFzk38L0DHs=',
+          // Password: 'wNaO0OoVM12LNojMPwTWIA==',
           ExternalLoginType: null,
           ExternalLoginId: null
         })

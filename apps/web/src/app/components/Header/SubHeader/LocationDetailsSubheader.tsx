@@ -7,9 +7,16 @@ interface LocationDetailsSubheaderProps {
   title: string;
   category: string;
   imageUrl?: string;
+  sections?: {
+    events?: boolean;
+    passes?: boolean;
+    deals?: boolean;
+    coupons?: boolean;
+    posts?: boolean;
+  };
 }
 
-const tabs = [
+const allTabs = [
   { id: 'events', label: 'Events' },
   { id: 'passes', label: 'Passes' },
   { id: 'deals', label: 'Deals' },
@@ -20,8 +27,16 @@ const tabs = [
 export function LocationDetailsSubheader({
   title,
   category,
-  imageUrl
+  imageUrl,
+  sections = {
+    events: true,
+    passes: true,
+    deals: true,
+    coupons: true,
+    posts: true,
+  }
 }: LocationDetailsSubheaderProps) {
+  const tabs = allTabs.filter(tab => sections[tab.id as keyof typeof sections] !== false);
   const subheaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,31 +105,35 @@ export function LocationDetailsSubheader({
               {title || "Starlight Oasis Glamping"}
             </span>
 
-            <button className="mt-4 bg-yellow-400 text-black text-lg font-medium px-5 py-2 rounded-full flex items-center space-x-2 hover:bg-yellow-500 transition cursor-pointer">
-              <span>Book it</span>
-              <img
-                src="/assets/Icons/Book-btn.svg"
-                alt="Arrow Right"
-                className="w-5 h-5"
-              />
-            </button>
-
-            <div className="mt-4 flex justify-around gap-4 w-full">
-              {tabs.map((tab) => (
-                <Button
-                  key={tab.id}
-                  onClick={() => scrollToSection(tab.id)}
-                  className="text-white text-sm"
-                >
-                  {tab.label}
-                </Button>
-              ))}
+            <div className="w-full flex justify-center">
+              <button className="mt-4 bg-yellow-400 text-black text-lg font-medium px-5 py-2 rounded-full flex items-center space-x-2 hover:bg-yellow-500 transition cursor-pointer">
+                <span>Book it</span>
+                <img
+                  src="/assets/Icons/Book-btn.svg"
+                  alt="Arrow Right"
+                  className="w-5 h-5"
+                />
+              </button>
             </div>
+
+            {tabs.length > 0 && (
+              <div className="mt-4 flex justify-around gap-4 w-full">
+                {tabs.map((tab) => (
+                  <Button
+                    key={tab.id}
+                    onClick={() => scrollToSection(tab.id)}
+                    className="text-white text-sm"
+                  >
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="hidden lg:flex items-center justify-between gap-6 px-6 py-4 relative">
-            <div className="absolute flex items-center gap-3">
-              <div className="w-20 h-20 rounded-full flex justify-center absolute -top-12">
+          <div className="hidden lg:flex items-center justify-between px-6 py-4 relative">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-20 h-20 rounded-full flex justify-center absolute -top-7 left-6">
                 <img
                   src="/assets/Icons/Subheader-logo.svg"
                   alt="Logo"
@@ -126,26 +145,30 @@ export function LocationDetailsSubheader({
               </span>
             </div>
 
-            <div className="flex items-center gap-6 ml-auto">
-              {tabs.map((tab) => (
-                <Button
-                  key={tab.id}
-                  onClick={() => scrollToSection(tab.id)}
-                  className="text-white text-base cursor-pointer"
-                >
-                  {tab.label}
-                </Button>
-              ))}
+            <div className="flex items-center gap-6">
+              {tabs.length > 0 && (
+                <div className="flex items-center gap-6">
+                  {tabs.map((tab) => (
+                    <Button
+                      key={tab.id}
+                      onClick={() => scrollToSection(tab.id)}
+                      className="text-white text-base cursor-pointer"
+                    >
+                      {tab.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
+              
+              <button className="bg-yellow-400 text-black text-sm font-medium px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-yellow-500 transition cursor-pointer whitespace-nowrap">
+                <span>Book it</span>
+                <img
+                  src="/assets/Icons/Book-btn.svg"
+                  alt="Arrow Right"
+                  className="w-4 h-4"
+                />
+              </button>
             </div>
-
-            <button className="bg-yellow-400 text-black text-sm font-medium px-4 py-2 rounded-full flex items-center space-x-2 hover:bg-yellow-500 transition cursor-pointer">
-              <span>Book it</span>
-              <img
-                src="/assets/Icons/Book-btn.svg"
-                alt="Arrow Right"
-                className="w-4 h-4"
-              />
-            </button>
           </div>
         </div>
       </div>

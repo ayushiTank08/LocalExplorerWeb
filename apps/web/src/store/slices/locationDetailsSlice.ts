@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiRequest } from '@/utils/api';
+import { API_ENDPOINTS, DEFAULT_REQUEST_OPTIONS } from '@/config/api.config';
 
 export interface Pass {
   Id: number;
@@ -121,8 +122,8 @@ export const fetchLocationDetails = createAsyncThunk<
   async ({ locationId, customerId }, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: LocationDetails }>({
-        url: 'https://tsunamistagingv2api.azurewebsites.net/api/Content/v4/getlocationdata',
-        method: 'PUT',
+        url: API_ENDPOINTS.LOCATION_DETAILS,
+        ...DEFAULT_REQUEST_OPTIONS,
         body: {
           locationid: locationId,
           customerId: customerId,
@@ -157,8 +158,8 @@ export const fetchPasses = createAsyncThunk<
   async (params, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: Pass[] }>({
-        url: 'https://tsunamistagingv2api.azurewebsites.net/api/passes/GetPassList',
-        method: 'PUT',
+        url: API_ENDPOINTS.PASSES,
+        ...DEFAULT_REQUEST_OPTIONS,
         body: {
           LocationId: params.locationId,
           CustomerId: params.customerId,
@@ -195,8 +196,8 @@ export const fetchPassDetails = createAsyncThunk<
   async (params, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: Pass }>({
-        url: 'https://tsunamistagingv2api.azurewebsites.net/api/passes/GetPassDetails',
-        method: 'PUT',
+        url: API_ENDPOINTS.PASS_DETAILS,
+        ...DEFAULT_REQUEST_OPTIONS,
         body: {
           PassId: params.passId,
           CustomerId: params.customerId,
@@ -227,8 +228,8 @@ export const fetchUserPasses = createAsyncThunk<
   async (params, { rejectWithValue }) => {
     try {
       const response = await apiRequest<{ Data: any[] }>({
-        url: 'https://tsunamistagingv2api.azurewebsites.net/api/passes/GetUserPassPurchaseInfo',
-        method: 'PUT',
+        url: API_ENDPOINTS.USER_PASSES,
+        ...DEFAULT_REQUEST_OPTIONS,
         body: {
           CustomerId: params.customerId,
           ContactId: params.contactId,
@@ -271,27 +272,21 @@ export const fetchDealsAndCoupons = createAsyncThunk<
   'locationDetails/fetchDealsAndCoupons',
   async ({ locationId, customerId }, { rejectWithValue }) => {
     try {
-      const url = 'https://tsunamistagingv2api.azurewebsites.net/api/Content/v4/getdealsandcouponlist';
-      const requestBody = {
-        customerId,
-        contactId: 0,
-        pageNumber: 0,
-        searchText: null,
-        languageCode: null,
-        sortBy: null,
-        sortDir: null,
-        isTourDePearl: false,
-        categoryId: 0,
-        userUniqueId: 0,
-        locationId,
-      };
-
       const response = await apiRequest<DealsAndCouponsResponse>({
-        url,
-        method: 'PUT',
-        body: requestBody,
-        headers: {
-          'Content-Type': 'application/json',
+        url: API_ENDPOINTS.DEALS_AND_COUPONS,
+        ...DEFAULT_REQUEST_OPTIONS,
+        body: {
+          customerId,
+          contactId: 0,
+          pageNumber: 0,
+          searchText: null,
+          languageCode: null,
+          sortBy: null,
+          sortDir: null,
+          isTourDePearl: false,
+          categoryId: 0,
+          userUniqueId: 0,
+          locationId,
         },
       });
 
