@@ -28,7 +28,7 @@ const { NotFoundState } = {
 
 const placesSelector = (state: RootState) => state.places;
 
-function DetailsContent() {
+function DetailsPage() {
   const searchParams = useSearchParams();
   const id = searchParams?.get('id');
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
@@ -1274,7 +1274,7 @@ function DetailsContent() {
 export default function PlaceDetailPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <DetailsContent />
+      <DetailsPage />
     </Suspense>
   );
 }
