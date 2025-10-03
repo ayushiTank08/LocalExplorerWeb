@@ -28,9 +28,15 @@ const { NotFoundState } = {
 
 const placesSelector = (state: RootState) => state.places;
 
-function DetailsPage() {
-  const searchParams = useSearchParams();
-  const id = searchParams?.get('id');
+interface DetailsPageProps {
+  searchParams?: {
+    id?: string;
+  };
+}
+
+function DetailsPage({ searchParams }: DetailsPageProps) {
+  const searchParamsClient = useSearchParams();
+  const id = searchParams?.id || searchParamsClient?.get('id') || '';
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   
   const handleCheckIn = async (message: string, photo?: File) => {
