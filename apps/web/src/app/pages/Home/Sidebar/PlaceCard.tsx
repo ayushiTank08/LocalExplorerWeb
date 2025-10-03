@@ -136,12 +136,17 @@ const PlaceCard: React.FC<LocationCardProps> = ({
       </div>
 
       <div className="flex px-3 py-2 flex-col items-start gap-2 self-stretch relative">
-        <div
-          className="self-stretch text-text-neutral-dark font-body text-[15px] font-bold leading-[120%] truncate cursor-pointer"
-          title={title}
-          onClick={handleSeeMore}
-        >
-          {title}
+        <div className="relative group w-full">
+          <div
+            className="text-text-neutral-dark font-body text-[15px] font-bold leading-[120%] cursor-pointer w-full"
+            title={title}
+            onClick={handleSeeMore}
+          >
+            <div className="relative inline-block max-w-full">
+              <span className="block truncate w-full">{title}</span>
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-black transition-all duration-300 group-hover:w-full"></span>
+            </div>
+          </div>
         </div>
         <div
           className="self-stretch text-text-neutral font-body text-sm font-normal leading-[140%]"
