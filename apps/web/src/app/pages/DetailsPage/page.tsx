@@ -224,6 +224,35 @@ function DetailsContent() {
     }
   }, [locationId]);
 
+  const useAuthStatus = () => {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+      setMounted(true);
+      const checkAuth = () => {
+        const token = localStorage.getItem('authToken');
+        setIsLoggedIn(!!token);
+      };
+      
+      checkAuth();
+      
+      const handleLogin = () => checkAuth();
+      
+      window.addEventListener('login', handleLogin);
+      window.addEventListener('storage', checkAuth);
+      
+      return () => {
+        window.removeEventListener('login', handleLogin);
+        window.removeEventListener('storage', checkAuth);
+      };
+    }, []);
+    
+    return mounted ? isLoggedIn : false;
+  };
+  
+  const isUserLoggedIn = useAuthStatus();
+
   const actionButtons = [
     { 
       icon: "/assets/Location_Details_Logos/Phone.svg", 
@@ -242,21 +271,23 @@ function DetailsContent() {
       alt: "Share",
       onClick: handleShare
     },
-    { 
-      icon: "/assets/Location_Details_Logos/Save.svg", 
-      alt: "Save",
-      onClick: () => console.log('Save clicked')
-    },
-    { 
-      icon: isLiked ? "/assets/Location_Details_Logos/Like.svg" : "/assets/Location_Details_Logos/Like.svg", 
-      alt: "Like",
-      onClick: handleLike
-    },
-    { 
-      icon: isPinned ? "/assets/Location_Details_Logos/Pin.svg" : "/assets/Location_Details_Logos/Pin.svg", 
-      alt: "Pin",
-      onClick: handlePin
-    },
+    ...(isUserLoggedIn ? [
+      { 
+        icon: "/assets/Location_Details_Logos/Save.svg", 
+        alt: "Save",
+        onClick: () => console.log('Save clicked')
+      },
+      { 
+        icon: isLiked ? "/assets/Location_Details_Logos/Like.svg" : "/assets/Location_Details_Logos/Like.svg", 
+        alt: "Like",
+        onClick: handleLike
+      },
+      { 
+        icon: isPinned ? "/assets/Location_Details_Logos/Pin.svg" : "/assets/Location_Details_Logos/Pin.svg", 
+        alt: "Pin",
+        onClick: handlePin
+      }
+    ] : [])
   ];
 
 
@@ -659,7 +690,7 @@ function DetailsContent() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-4 text-gray-500">
+                  <div className="text-center text-gray-500">
                     No upcoming events at this time.
                   </div>
                 )}
@@ -803,7 +834,7 @@ function DetailsContent() {
                 {dealsAndCouponsLoading ? (
                   <div className="text-center py-4">Loading coupons...</div>
                 ) : coupons.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500">No coupons available at this time.</div>
+                  <div className="text-center text-gray-500">No coupons available at this time.</div>
                 ) : (
                   <div id="coupons">
                   <h3 className="text-2xl font-semibold text-gray-900 mb-4">Coupons</h3>
@@ -1047,7 +1078,7 @@ function DetailsContent() {
                   {activities.filter(
                     act => act.Comment?.trim() && act.Comment.toLowerCase() !== "giveaway"
                   ).length === 0 && (
-                      <div className="text-center py-4 text-gray-500">
+                      <div className="text-center text-gray-500">
                         No comments yet. Be the first to share your experience!
                       </div>
                     )}
@@ -1135,11 +1166,11 @@ function DetailsContent() {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-3 mt-3 justify-end">
+              {/* <div className="flex gap-3 mt-3 justify-end">
                 <div className="w-10 h-10 bg-white rounded"></div>
                 <div className="w-10 h-10 bg-white rounded"></div>
                 <div className="w-10 h-10 bg-white rounded"></div>
-              </div>
+              </div> */}
             </div>
 
             <div className="rounded-lg space-y-3 text-sm text-gray-700">

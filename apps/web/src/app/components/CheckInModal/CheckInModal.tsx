@@ -67,8 +67,9 @@ const CheckInModal: React.FC<CheckInModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-2">
           {!previewUrl ? (
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-md p-8 text-gray-500 cursor-pointer hover:bg-gray-50">
-              <span className="text-sm">Add an Image</span>
+            <label className="flex flex-col items-center justify-center w-32 h-32 bg-[#EAEBEA] border-2 border-gray-300 rounded-md text-gray-500 cursor-pointer">
+              <img src="/assets/Icons/camera.svg" alt="Add" className="h-8 w-8 mb-2 text-gray-400"/>
+              <span className="text-sm text-[#838683]">Add an Image</span>
               <input
                 type="file"
                 accept="image/*"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from "next/link";
 import { Button } from "@nextforge/ui";
 import { LoginModal } from "../../Login/LoginModal";
@@ -9,10 +9,109 @@ interface HeaderProps {
   onSearchToggle?: () => void;
 }
 
+import CryptoJS from 'crypto-js';
+
+interface UserData {
+  FirstName: string;
+  LastName: string;
+  ProfileURL?: string;
+  Email: string;
+}
+
+const decryptData = (encryptedData: string): string => {
+  try {
+    if (!encryptedData) return '';
+    
+    if (!encryptedData.includes('==') && !encryptedData.includes('+') && !encryptedData.includes('/')) {
+      return encryptedData;
+    }
+    
+    const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || '';
+    const ENCRYPTION_IV = process.env.NEXT_PUBLIC_ENCRYPTION_IV || '';
+    
+    if (!ENCRYPTION_KEY || !ENCRYPTION_IV) {
+      console.warn('Encryption key or IV not found. Cannot decrypt data.');
+      return encryptedData;
+    }
+    
+    const key = CryptoJS.enc.Utf8.parse(ENCRYPTION_KEY);
+    const iv = CryptoJS.enc.Utf8.parse(ENCRYPTION_IV);
+    
+    const decrypted = CryptoJS.AES.decrypt(encryptedData, key, {
+      iv: iv,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+    
+    return decrypted.toString(CryptoJS.enc.Utf8) || encryptedData;
+  } catch (error) {
+    console.error('Decryption error:', error);
+    return encryptedData;
+  }
+};
+
 const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
   const [activeTab, setActiveTab] = useState('explore');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      try {
+        const userData = JSON.parse(storedUserData);
+        const decryptedUserData = {
+          ...userData,
+          FirstName: decryptData(userData.FirstName || ''),
+          LastName: decryptData(userData.LastName || ''),
+          Email: decryptData(userData.Email || '')
+        };
+        setUserData(decryptedUserData);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isDropdownOpen && !target.closest('.relative')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
+  const handleLoginSuccess = (userData: UserData) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('login'));
+    }
+    
+    const decryptedUserData = {
+      ...userData,
+      FirstName: decryptData(userData.FirstName || ''),
+      LastName: decryptData(userData.LastName || ''),
+      Email: decryptData(userData.Email || '')
+    };
+    setUserData(decryptedUserData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('userData');
+    localStorage.removeItem('authToken');
+    setUserData(null);
+    
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('login'));
+    }
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -64,10 +163,12 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
                     </span>
                   </Button>
                 </Link> */}
-                <button className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg">
-                  <img src="/assets/Icons/Home.svg" alt="Home" width="20" height="20" className="w-5 h-5" />
-                  <span className="text-gray-800">Home</span>
-                </button>
+                <Link href="/" passHref className="w-full">
+                  <button className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg">
+                    <img src="/assets/Icons/Home.svg" alt="Home" width="20" height="20" className="w-5 h-5" />
+                    <span className="text-gray-800">Home</span>
+                  </button>
+                </Link>
                 <button className="w-full flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg">
                   <img src="/assets/Icons/Ticket.svg" alt="Passes" className="w-5 h-5" />
                   <span className="text-gray-800">Passes</span>
@@ -141,11 +242,13 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
         </div>
 
         <div className="hidden lg:flex items-center gap-4 flex-1 relative">
-          <Button className="flex h-10 min-w-10 p-2 justify-center items-center gap-2 rounded border border-[var(--color-neutral)] relative cursor-pointer">
-            <span className="flex w-5 h-5 justify-center items-center relative">
-              <img src="/assets/Icons/Home.svg" alt="Home" width="20" height="20" className="w-5 h-5" />
-            </span>
-          </Button>
+          <Link href="/" passHref>
+            <Button className="flex h-10 min-w-10 p-2 justify-center items-center gap-2 rounded border border-[var(--color-neutral)] relative cursor-pointer">
+              <span className="flex w-5 h-5 justify-center items-center relative">
+                <img src="/assets/Icons/Home.svg" alt="Home" width="20" height="20" className="w-5 h-5" />
+              </span>
+            </Button>
+          </Link>
 
           <Button className="flex h-10 px-4 py-2 justify-center items-center gap-2 rounded border border-[var(--color-neutral)] relative cursor-pointer">
             <span className="flex w-5 h-5 justify-center items-center relative">
@@ -183,14 +286,61 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
               FAQs
             </Button>
           </div>
-          <div className="flex h-10 px-4 py-2 justify-center items-center gap-2 rounded border border-text-primary relative border-[var(--color-primary)]">
-            <Button 
-              onClick={() => setIsLoginModalOpen(true)}
-              className="text-text-primary font-body text-base font-normal text-[var(--color-primary)] cursor-pointer"
-            >
-              Login
-            </Button>
-          </div>
+          {userData ? (
+            <div className="relative">
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 focus:outline-none"
+              >
+                {userData.ProfileURL ? (
+                  <img 
+                    src={userData.ProfileURL} 
+                    alt="Profile" 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-sm">
+                    {userData.FirstName?.charAt(0)}{userData.LastName?.charAt(0)}
+                  </div>
+                )}
+                {/* <img 
+                  src="/assets/Icons/Down-Arrow.svg" 
+                  alt="" 
+                  className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'transform rotate-180' : ''}`}
+                /> */}
+              </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    My Profile
+                  </a>
+                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    My Orders
+                  </a>
+                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Settings
+                  </a>
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex h-10 px-4 py-2 justify-center items-center gap-2 rounded border border-text-primary relative border-[var(--color-primary)]">
+              <Button 
+                onClick={() => setIsLoginModalOpen(true)}
+                className="text-text-primary font-body text-base font-normal text-[var(--color-primary)] cursor-pointer"
+              >
+                Login
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -216,7 +366,10 @@ const Header: React.FC<HeaderProps> = ({ onSearchToggle }) => {
       </nav>
 
       {isLoginModalOpen && (
-        <LoginModal onClose={() => setIsLoginModalOpen(false)} />
+        <LoginModal 
+          onClose={() => setIsLoginModalOpen(false)}
+          onLoginSuccess={handleLoginSuccess}
+        />
       )}
     </>
   );

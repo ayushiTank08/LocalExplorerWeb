@@ -23,8 +23,8 @@
     "type-check": "turbo run type-check"
   },
   "devDependencies": {
-    "turbo": "2.5.5",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "turbo": "2.5.5"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -37,5 +37,10 @@
   "bugs": {
     "url": "https://github.com/nextforge/nextforge/issues"
   },
-  "homepage": "https://github.com/nextforge/nextforge#readme"
+  "homepage": "https://github.com/nextforge/nextforge#readme",
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
+    "@fortawesome/react-fontawesome": "^3.1.0"
+  }
 }
