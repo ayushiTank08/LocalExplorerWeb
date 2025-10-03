@@ -7,6 +7,12 @@ interface WeatherWidgetProps {
   className?: string;
 }
 
+interface CustomWindow extends Window {
+  __weatherwidget_init?: () => void;
+}
+
+declare const window: CustomWindow;
+
 const WeatherWidget: React.FC<WeatherWidgetProps> = ({
   location = 'Marion FL',
   className = '',
@@ -26,8 +32,8 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({
       widget.setAttribute('data-basecolor', primaryColor);
     }
 
-    if ((window as any).__weatherwidget_init) {
-      (window as any).__weatherwidget_init();
+    if (window.__weatherwidget_init) {
+      window.__weatherwidget_init();
     }
 
     return () => {
